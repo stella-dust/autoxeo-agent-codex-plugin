@@ -1,161 +1,68 @@
 ---
-name: AutoXEO Agent for Codex
-description: A precise, evidence-led GEO operations workbench inside Codex.
+name: AutoXEO for Codex
+description: A Codex-native research folio for context, official collections and local artifacts.
 colors:
-  signal-violet: "#6b3fe7"
-  signal-violet-deep: "#5030bb"
-  instrument-ink: "#172022"
-  muted-ink: "#607074"
-  quiet-ink: "#56666a"
-  paper: "#fbfcfc"
-  field: "#f3f5f6"
-  divider: "#d7dfe1"
-  success: "#157a5b"
+  cobalt: "#1859d1"
+  cobalt-deep: "#1044a4"
+  graphite: "#16202b"
+  slate: "#5b6775"
+  slate-quiet: "#788594"
+  masthead-muted: "#aeb8c4"
+  masthead-divider: "#44505d"
+  masthead-note: "#9fb0c2"
+  masthead-copy: "#b9c4cf"
+  masthead-stroke: "#667482"
+  paper: "#fafbfc"
+  canvas: "#eef1f4"
+  folio: "#e3e8ed"
+  divider: "#ccd4dc"
+  divider-strong: "#9da9b6"
+  authorization-line: "#b9c6d7"
+  success: "#13745b"
+  success-bright: "#2ab489"
   warning: "#9a5a08"
-  danger: "#b62e31"
+  warning-local: "#9a6530"
+  danger: "#ae2d36"
+  danger-line: "#d8abb0"
+  danger-paper: "#fff5f5"
 typography:
-  headline:
-    fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif"
-    fontSize: "clamp(22px, 2.1vw, 28px)"
-    fontWeight: 700
-    lineHeight: 1.2
-    letterSpacing: "-0.025em"
-  title:
-    fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif"
-    fontSize: "14px"
-    fontWeight: 700
-    lineHeight: 1.4
-  body:
-    fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif"
-    fontSize: "12px"
-    fontWeight: 400
-    lineHeight: 1.5
-  label:
-    fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif"
-    fontSize: "11px"
-    fontWeight: 700
-    lineHeight: 1.4
-    letterSpacing: "0.065em"
+  family: "Avenir Next, SF Pro Text, PingFang SC, Microsoft YaHei, system-ui, sans-serif"
+  headline: "clamp(32px, 4.3vw, 56px) / 1.06 / 700"
+  body: "14px / 1.55 / 400"
 rounded:
-  sm: "7px"
-  md: "11px"
-spacing:
-  xs: "4px"
-  sm: "8px"
-  md: "16px"
-  lg: "24px"
-components:
-  button-primary:
-    backgroundColor: "{colors.signal-violet}"
-    textColor: "{colors.paper}"
-    typography: "{typography.body}"
-    rounded: "{rounded.sm}"
-    padding: "9px 13px"
-  button-primary-hover:
-    backgroundColor: "{colors.signal-violet-deep}"
-    textColor: "{colors.paper}"
-    rounded: "{rounded.sm}"
-  panel:
-    backgroundColor: "{colors.paper}"
-    textColor: "{colors.instrument-ink}"
-    rounded: "{rounded.md}"
+  mark: "9px"
+  control: "10px"
+  navigation: "11px"
+  surface: "14px"
+  emphasis: "16px"
 ---
 
-# Design System: AutoXEO Agent for Codex
+# Design System: The Research Folio
 
-## Overview
+## Creative North Star
 
-**Creative North Star: "The Evidence Instrument"**
+The local workbench feels like a live research folio sitting beside Codex, not
+a miniature SaaS application. A graphite masthead establishes local truth, a
+mist-grey folio indexes the three surfaces, and one cobalt signal identifies the
+next safe operation. Wide paper ledgers carry facts without turning every row
+into a card.
 
-The workbench behaves like a precise operating instrument, not a marketing
-dashboard. Cool neutral surfaces make long sessions quiet; one signal violet
-marks the current path, safe action and focus. Exact state, Evidence and cost
-remain visually ahead of decoration.
+## Structure
 
-**Key Characteristics:**
+- `Context`, `Collections` and `Artifacts` are the complete navigation.
+- The first viewport leads with the product boundary and one exact next action.
+- Account, Wiki and Cloud truths use separated ledger rows.
+- Official platform capabilities use a network ledger, not KPI tiles.
+- Artifact preview is the only persistent overlay and preserves file identity.
 
-- Compact but readable operational density.
-- Hairline-separated lists before walls of cards.
-- Semantic colors communicate state only.
-- The next safe action is always visually explicit.
+## Rules
 
-## Colors
-
-The palette is neutral and low-noise, with one rare signal color and three
-strict semantic state colors.
-
-**The One Signal Rule.** Violet is reserved for action, selection, progress and
-focus; it is not ambient decoration.
-
-**The Truth Color Rule.** Success, warning and danger appear only when the
-underlying state warrants them.
-
-## Typography
-
-System UI fonts keep mixed Chinese and English crisp inside Codex. The compact
-type ramp creates density through weight and spacing rather than miniature text;
-monospace is reserved for paths, IDs and measurements.
-
-**The Operational Hierarchy Rule.** One page headline leads, section titles
-organize, body text explains, and uppercase labels only identify compact groups.
-
-## Layout
-
-A 46px truth bar sits above a 242px project rail and a fluid work canvas. The
-optional 342px inspector appears only when detail is requested. Main content is
-bounded at 1120px. Below 820px the rail and inspector become dismissible layers;
-below 520px task state, action cost and workflow rows reflow vertically without
-horizontal scrolling. Coarse pointers receive 44px hit targets.
-
-## Elevation & Depth
-
-The system is flat by default. Dividers and tonal surfaces establish most
-hierarchy; restrained ambient shadow is limited to transient inspectors and the
-primary next-action surface.
-
-**The Flat-at-Rest Rule.** Persistent content does not float merely to look
-important.
-
-## Shapes
-
-Controls use gently compact corners; larger task surfaces use a slightly broader
-corner. Pills are reserved for small state labels. Hairline dividers carry more
-of the structure than enclosing borders.
-
-## Components
-
-### Buttons
-
-Primary actions use signal violet with white text; secondary actions use paper,
-ink and a stronger neutral border. Hover deepens the action color and
-focus-visible always carries a two-pixel signal outline.
-
-### Status labels
-
-Status labels pair an icon, explicit text and a softly tinted semantic surface.
-Color never replaces the written state.
-
-### Navigation
-
-The active item uses a white surface, ink and a subtle structural shadow.
-Navigation collapses into a 44px menu trigger on narrow screens.
-
-### Next-action surface
-
-The signature surface binds state, explanation, Credit impact and the single
-safe action into one responsive unit.
-
-## Do's and Don'ts
-
-### Do:
-
-- **Do** lead with verified state, next action and cost or impact.
-- **Do** preserve keyboard focus, reduced motion and 44px coarse-pointer targets.
-- **Do** keep complete loading, empty, offline, partial, success and error copy.
-
-### Don't:
-
-- **Don't** create a generic card wall or vanity-metric dashboard.
-- **Don't** use gradients, glass effects or violet as decorative atmosphere.
-- **Don't** imply provider availability, Evidence or billing outcomes that the
-  backend did not prove.
+1. Cobalt is reserved for action, focus and the active path.
+2. Status color always has exact text; no decorative status dots.
+3. Persistent surfaces rely on line and tone. Only the next-action ledger and
+   transient preview may use shadow.
+4. Body text stays at 14px; metadata never drops below 11px.
+5. Controls name real actions. “Continue” and generic “Process” are forbidden.
+6. No six-stage workflow, vanity metrics, gradients, glass or card wall.
+7. Narrow layouts preserve all truth and actions in one column without
+   horizontal scrolling; coarse-pointer targets reach 44px.

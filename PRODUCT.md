@@ -2,10 +2,11 @@
 
 ## Positioning
 
-AutoXEO Agent for Codex is a public Codex Plugin that turns a user's project
-workspace and AutoXEO Cloud account into an auditable China GEO operating loop:
-Brand Wiki, reproducible questions, official-provider collection, Evidence,
-analysis and durable reports.
+AutoXEO for Codex is a public Plugin whose six Skills turn the current Codex
+session into an auditable China GEO research environment. Codex produces the
+Brand Wiki, reproducible questions, baseline/retest interpretation and durable
+deliverables. Cloud is a narrow external authority for account/project context,
+official-provider collection, Evidence, Job state and Credit receipts.
 
 ## Operating context
 
@@ -19,10 +20,10 @@ analysis and durable reports.
 
 ## Evidence on hand
 
-The inherited v0.3.3 implementation has a local loopback workbench, local MCP,
-three GEO Skills, Cloud device login, account/project binding, question-set
-freeze, capture preflight/start/status, Evidence-aware reporting and release
-packaging. AXI-007 must re-verify all of these in the new public repository.
+AXI-008 replaces the inherited Desktop-shaped six-stage workbench with a
+Codex-native Skill suite and three-surface companion workbench. The 宜人到家
+materials informed evidence tiers, reproducible questions, deterministic metric
+calculation and baseline/retest reporting only; no customer material ships.
 
 ## Product principles
 
@@ -33,11 +34,12 @@ packaging. AXI-007 must re-verify all of these in the new public repository.
 4. Local artifacts remain useful offline; Cloud facts never become local
    guesses.
 5. Fixture output is test evidence only and never `observed` provider Evidence.
-6. Payment and unavailable Provider APIs remain honest configuration gates.
+6. No independent dialogue-model client or `DEEPSEEK_CHAT_API_KEY` exists.
+7. Payment and unavailable Provider APIs remain honest configuration gates.
 
-## Explicit assumptions for AXI-007
+## Explicit assumptions for AXI-008
 
-The owner has fixed Codex as the only host for this release, DeepSeek as the
-only real Provider test slice, `agent.autoxeo.com` as the Cloud/Admin origin,
-and visual quality/consistency as release requirements. These assumptions are
-approved for implementation on 2026-08-22.
+The owner has fixed Codex as the only host, current-session inference as the only
+generative runtime, DeepSeek as the official Provider test slice,
+`agent.autoxeo.com` as the Cloud/Admin origin, and visual quality/consistency as
+release requirements. These assumptions are approved on 2026-08-22.

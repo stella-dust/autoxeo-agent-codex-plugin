@@ -16,7 +16,16 @@ await access(path.join(root, "dist/server.mjs")).catch(() => errors.push("dist/s
 await access(path.join(root, "dist/ui/index.html")).catch(() => errors.push("dist/ui/index.html is missing; run npm run build"));
 
 const skillRoot = path.join(root, "skills");
-const skillNames = await readdir(skillRoot);
+const skillNames = [];
+for (const entry of await readdir(skillRoot, { withFileTypes: true })) {
+  if (!entry.isDirectory()) continue;
+  try {
+    await access(path.join(skillRoot, entry.name, "SKILL.md"));
+    skillNames.push(entry.name);
+  } catch {
+    // Empty directories left by a source migration are not packaged as Skills.
+  }
+}
 for (const skillName of skillNames) {
   const skillPath = path.join(skillRoot, skillName, "SKILL.md");
   const content = await readFile(skillPath, "utf8").catch(() => "");

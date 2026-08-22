@@ -11,7 +11,14 @@ const directories = [
   ".autoxeo/index",
   ".autoxeo/sync/checkpoints",
   ".autoxeo/recovery",
-  "knowledge/brands",
+  "brand-wiki/entities",
+  "brand-wiki/evidence",
+  "questions/drafts",
+  "questions/frozen",
+  "collections/datasets",
+  "analysis/baselines",
+  "analysis/retests",
+  "deliverables",
   "memory/operator",
   "memory/workspace",
   "tasks",
@@ -21,16 +28,15 @@ const directories = [
 ] as const;
 
 const templates: Record<string, string> = {
-  "README.md": "# AutoXEO Workspace\n\n本目录由 AutoXEO Agent 管理。知识库、GEO 六节点产物和报告均使用可读文件保存；Cloud 凭据与平台 API Key 不写入本目录。\n",
+  "README.md": "# AutoXEO Workspace\n\n本目录由 AutoXEO for Codex 管理。Brand Wiki、问题集、分析与交付物均为可读、可版本化文件。Codex 当前会话负责推理，Cloud 只负责账号与官方平台采集；任何 Provider Key 都不会写入本目录。\n",
   "memory/operator/preferences.md": "# 操作偏好\n\n记录经用户确认、可跨任务复用的偏好。不要记录密钥、Token 或敏感个人信息。\n",
   "memory/workspace/decisions.md": "# Workspace 决策记录\n\n记录目录迁移、命名和方法版本决策。\n",
-  "templates/knowledge/wiki-page.md": "---\ntitle: \"\"\nstatus: draft\nsource_refs: []\nupdated_at: \"\"\n---\n\n# 标题\n\n## 可引用事实\n\n## 来源与边界\n",
-  "templates/stages/01-question-research.md": "# 问题研究\n\n## 业务目标\n\n## 受众与意图\n\n## 冻结问题集\n\n## 版本与审批\n",
-  "templates/stages/02-platform-capture.md": "# 平台采集\n\n## 冻结问题版本\n\n## 平台与模型\n\n## Evidence / Receipt\n\n## 失败与重试\n",
-  "templates/stages/03-metric-analysis.md": "# 指标分析\n\n## 数据范围与 provenance\n\n## 方法版本\n\n## 指标与结论\n\n## 限制\n",
-  "templates/stages/04-content-production.md": "# 内容生产\n\n## Brief\n\n## 草稿\n\n## 审核结论\n\n## 已批准版本\n",
-  "templates/stages/05-distribution.md": "# 投放任务\n\n## 目标与负责人\n\n## 已批准内容\n\n## 执行回执\n\n## 未完成事项\n",
-  "templates/stages/06-same-question-retest.md": "# 同题复测\n\n## 基线批次\n\n## 冻结问题版本\n\n## 复测批次\n\n## 差异与结论\n",
+  "brand-wiki/index.md": "---\nschema_version: autoxeo-brand-wiki.v1\nstatus: draft\nbrand: \"\"\nupdated_at: \"\"\n---\n\n# Brand Wiki\n\n## 品牌实体\n\n## 产品与服务\n\n## 受众与场景\n\n## 差异化事实\n\n## 来源索引\n\n## 禁止推断\n",
+  "brand-wiki/evidence/registry.json": "{\n  \"schemaVersion\": \"autoxeo-evidence-registry.v1\",\n  \"sources\": []\n}\n",
+  "templates/knowledge/wiki-page.md": "---\ntitle: \"\"\nentity_type: \"\"\nstatus: draft\nsource_refs: []\nupdated_at: \"\"\n---\n\n# 实体名称\n\n## 可引用事实\n\n## 关系与别名\n\n## 来源与边界\n",
+  "templates/stages/question-set.md": "# GEO 问题集\n\n方法版本：geo-question-method-2026-08\n\n## 业务关键词\n\n## 证据范围\n\n## 问题分布\n\n## 冻结记录\n",
+  "templates/stages/baseline-analysis.md": "# GEO 基线分析\n\n## 范围与 Evidence\n\n## 确定性指标\n\n## Codex 解释\n\n## 差距与行动\n\n## 限制与复测协议\n",
+  "templates/stages/retest-analysis.md": "# GEO 同题复测\n\n## 基线与复测可比性\n\n## 变化事实\n\n## 归因假设\n\n## 保留与调整\n\n## 下一复测窗口\n",
 };
 
 export interface PluginWorkspaceManifest {
@@ -38,7 +44,7 @@ export interface PluginWorkspaceManifest {
   workspaceId: string;
   createdAt: string;
   lastMigratedAt: string;
-  paths: { knowledge: "knowledge"; tasks: "tasks"; memory: "memory"; templates: "templates" };
+  paths: { knowledge: "brand-wiki"; tasks: "questions"; memory: "memory"; templates: "templates" };
 }
 
 export interface DesktopWorkspaceManifest {
@@ -100,7 +106,7 @@ export async function ensureWorkspace(root: string): Promise<WorkspaceManifest> 
       workspaceId: randomUUID(),
       createdAt: timestamp,
       lastMigratedAt: timestamp,
-      paths: { knowledge: "knowledge", tasks: "tasks", memory: "memory", templates: "templates" },
+      paths: { knowledge: "brand-wiki", tasks: "questions", memory: "memory", templates: "templates" },
     };
     await writeAtomic(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
   }
@@ -120,17 +126,14 @@ export async function createTaskLayout(root: string, taskId: string, slug: strin
   const relative = path.join("tasks", `${taskId}-${safeSlug}`);
   const base = path.join(root, relative);
   const taskDirectories = [
-    "01-question-research/versions",
-    "02-platform-capture/batches",
-    "03-metric-analysis",
-    "04-content-production/briefs",
-    "04-content-production/drafts",
-    "04-content-production/reviews",
-    "04-content-production/approved",
-    "05-distribution/targets",
-    "05-distribution/receipts",
-    "06-same-question-retest/batches",
-    "reports",
+    "brief",
+    "questions/drafts",
+    "questions/frozen",
+    "collections/datasets",
+    "analysis/baselines",
+    "analysis/retests",
+    "deliverables/drafts",
+    "deliverables/approved",
     "conversations",
     "attachments",
     ".autoxeo/checkpoints",

@@ -1,0 +1,5 @@
+interface:
+  display_name: "Brand Wiki 管理"
+  short_description: "把品牌资料整理为可追溯、可复用的本地知识库"
+  default_prompt: "使用 $manage-brand-wiki 整理当前工作区的品牌资料并报告证据缺口。"
+

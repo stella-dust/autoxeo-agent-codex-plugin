@@ -1,0 +1,5 @@
+interface:
+  display_name: "GEO 交付物"
+  short_description: "将证据与分析转成分层、可复测的真实产物"
+  default_prompt: "使用 $produce-geo-deliverables 把当前 GEO 分析整理成管理层摘要和执行行动包。"
+

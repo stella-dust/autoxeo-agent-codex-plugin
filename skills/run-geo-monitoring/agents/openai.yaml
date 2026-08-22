@@ -1,4 +1,0 @@
-interface:
-  display_name: "GEO 平台采集"
-  short_description: "完成中国 AI 平台采集预检、Credit 确认、执行与失败恢复"
-  default_prompt: "使用 $run-geo-monitoring 预检当前任务的五平台采集并展示 Credit 预算。"

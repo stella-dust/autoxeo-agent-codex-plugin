@@ -1,0 +1,5 @@
+interface:
+  display_name: "GEO 同题复测"
+  short_description: "检查可比性并解释基线到复测的真实变化"
+  default_prompt: "使用 $compare-geo-retest 比较当前复测与基线，并生成下一周期建议。"
+
