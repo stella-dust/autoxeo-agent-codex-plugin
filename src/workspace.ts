@@ -71,6 +71,15 @@ export function defaultWorkspaceRoot(): string {
   return path.join(os.homedir(), "Documents", "AutoXEO_Workspace");
 }
 
+export function displayWorkspaceRoot(root: string): string {
+  const home = os.homedir();
+  if (root === home) return "~";
+  if (root.startsWith(`${home}${path.sep}`)) {
+    return `~/${path.relative(home, root).split(path.sep).join("/")}`;
+  }
+  return root;
+}
+
 export function resolveWorkspaceRoot(value?: string): string {
   if (!value) return defaultWorkspaceRoot();
   const selected = path.resolve(value);

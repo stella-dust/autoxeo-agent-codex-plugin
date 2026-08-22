@@ -7,12 +7,12 @@ FORM: Codex-native operational folio, ranked first; direct brief substitution, n
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
 */
 import {
-  ArrowUpRight, BookOpen, ChevronRight, CircleAlert, Cloud, FileText,
+  ArrowUpRight, BookOpen, Check, ChevronRight, CircleAlert, Cloud, Copy, FileText,
   FolderOpen, KeyRound, LoaderCircle, LogOut, Menu, Play, RefreshCw,
   ShieldCheck, X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Artifact, ArtifactKind, ProjectState } from "../../src/contracts.js";
+import type { Artifact, ArtifactKind, ProjectState, SetupGuide } from "../../src/contracts.js";
 
 type View = "context" | "collections" | "artifacts";
 
@@ -70,6 +70,7 @@ function formatTime(value: string): string {
 export function App() {
   const [state, setState] = useState<ProjectState>();
   const [connection, setConnection] = useState<ConnectionStatus>();
+  const [guide, setGuide] = useState<SetupGuide>();
   const [account, setAccount] = useState<AccountOverview>();
   const [csrf, setCsrf] = useState<string>();
   const [view, setView] = useState<View>("context");
@@ -79,13 +80,15 @@ export function App() {
   const [preflight, setPreflight] = useState<PreflightResult>();
   const [selection, setSelection] = useState({ organizationId: "", projectId: "", taskBudget: 100 });
   const [preview, setPreview] = useState<{ artifact: Artifact; content: string }>();
+  const [copied, setCopied] = useState<"path" | "prompt">();
 
   const load = useCallback(async () => {
-    const [nextState, nextConnection] = await Promise.all([
-      request<ProjectState>("/api/v1/state"), request<ConnectionStatus>("/api/v1/connection"),
+    const [nextState, nextConnection, nextGuide] = await Promise.all([
+      request<ProjectState>("/api/v1/state"), request<ConnectionStatus>("/api/v1/connection"), request<SetupGuide>("/api/v1/get-started"),
     ]);
     setState(nextState);
     setConnection(nextConnection);
+    setGuide(nextGuide);
     if (nextConnection.account.state === "signed_in") {
       const nextAccount = await request<AccountOverview>("/api/v1/account");
       setAccount(nextAccount);
@@ -129,9 +132,40 @@ export function App() {
     return [...groups.entries()];
   }, [state?.artifacts]);
 
-  if (!state) return (
+  const copyText = async (value: string, kind: "path" | "prompt") => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(kind);
+      window.setTimeout(() => setCopied(undefined), 2200);
+    } catch {
+      setError("无法写入剪贴板，请手动复制该内容。");
+    }
+  };
+
+  const runNextAction = async () => {
+    if (!guide) return;
+    if (guide.nextAction.kind === "copy_prompt" && guide.nextAction.prompt) {
+      await copyText(guide.nextAction.prompt, "prompt");
+      return;
+    }
+    if (guide.nextAction.kind === "connect_account") {
+      await command({ command: "start_account_connection" });
+      return;
+    }
+    if (guide.nextAction.kind === "poll_account") {
+      await command({ command: "poll_account_connection" });
+      return;
+    }
+    if (guide.nextAction.kind === "bind_project") {
+      document.querySelector("#cloud-binding")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    setView("collections");
+  };
+
+  if (!state || !guide) return (
     <main className="boot">
-      <span className="brand-mark" aria-hidden="true">AX</span>
+      <img className="brand-mark" src="/autoxeo-mark.svg" alt="" />
       <h1>{error ? "工作台未能连接" : "正在恢复研究现场"}</h1>
       <p>{error ?? "校验本机会话、工作区与 Cloud 状态"}</p>
       {error ? <button onClick={() => window.location.reload()}>重新连接</button> : <LoaderCircle className="spin" aria-label="加载中" />}
@@ -140,17 +174,16 @@ export function App() {
 
   const signedIn = connection?.account.state === "signed_in";
   const bound = Boolean(state.project.cloudId);
-  const nextAction = !signedIn ? "连接 AutoXEO 账号" : !bound ? "绑定 Cloud 项目" : !state.collection.questionSetId ? "回到 Codex 生成并冻结问题集" : state.collection.nextAction;
 
   return (
     <div className="shell">
       <header className="masthead">
-        <div className="brand"><button className="menu" onClick={() => setMenuOpen((value) => !value)} aria-label="切换导航"><Menu /></button><span className="brand-mark">AX</span><strong>AutoXEO</strong><span>for Codex</span></div>
+        <div className="brand"><button className="menu" onClick={() => setMenuOpen((value) => !value)} aria-label="切换导航"><Menu /></button><img className="brand-mark" src="/autoxeo-mark.svg" alt="" /><strong>AutoXEO</strong><span>for Codex</span></div>
         <div className="truth"><span className={connection?.connected ? "signal ready" : "signal"} />{connection?.connected ? "Cloud connected" : "Local only"}<span className="divider" /><ShieldCheck />127.0.0.1</div>
       </header>
 
       <aside className={`folio ${menuOpen ? "open" : ""}`}>
-        <div className="project-identity"><small>WORKSPACE</small><strong>{state.project.cloudName ?? "Local GEO Research"}</strong><span>{state.project.localRootName}</span></div>
+        <div className="project-identity"><small>WORKSPACE</small><strong>{state.project.cloudName ?? "Local GEO Research"}</strong><span title={guide.workspace.displayPath}>{guide.workspace.displayPath}</span></div>
         <nav aria-label="工作台导航">
           {(Object.keys(viewCopy) as View[]).map((key) => <button key={key} className={view === key ? "active" : ""} onClick={() => { setView(key); setMenuOpen(false); }}><span>{viewCopy[key].label}</span><small>{viewCopy[key].description}</small><ChevronRight /></button>)}
         </nav>
@@ -164,8 +197,13 @@ export function App() {
         {error && <div className="error" role="alert"><CircleAlert />{error}<button onClick={() => setError(undefined)} aria-label="关闭"><X /></button></div>}
 
         {view === "context" && <>
-          <section className="stage-head"><div><h1>把推理留在 Codex，<br />把采集交给 Cloud。</h1><p>这个工作台只管理真实上下文。问题生产、分析、复测与 Wiki 写作都在当前 Codex 会话完成。</p></div><BookOpen aria-hidden="true" /></section>
-          <section className="next-ledger"><div><span>下一步</span><h2>{nextAction}</h2><p>{connection?.message}</p></div>{!signedIn ? <button onClick={() => void command({ command: "start_account_connection" })} disabled={Boolean(busy)}><KeyRound />连接账号</button> : <button className="secondary" onClick={() => void load()}><RefreshCw />刷新状态</button>}</section>
+          <section className="stage-head"><div><h1>{guide.progress.completed < guide.progress.total ? "从一个真实工作区开始。" : "把推理留在 Codex，把采集交给 Cloud。"}</h1><p>本地目录由 Plugin 自动建立。Codex 负责 Wiki、问题、分析与交付；Cloud 只负责账号、官方采集、Evidence 和 Credit。</p></div><BookOpen aria-hidden="true" /></section>
+          <section className="next-ledger"><div><span>推荐下一步</span><h2>{guide.nextAction.label}</h2><p>{guide.nextAction.description}</p></div><button onClick={() => void runNextAction()} disabled={Boolean(busy)}>{guide.nextAction.kind === "copy_prompt" ? <Copy /> : guide.nextAction.kind === "connect_account" || guide.nextAction.kind === "poll_account" ? <KeyRound /> : guide.nextAction.kind === "bind_project" ? <Cloud /> : <Play />}{copied === "prompt" ? "已复制，回到 Codex 粘贴" : guide.nextAction.label}</button></section>
+
+          <section className="activation-ledger" aria-labelledby="activation-title">
+            <header><div><h2 id="activation-title">启动路线</h2><p>{guide.progress.completed}/{guide.progress.total} 已完成 · 本地研究不必等待 Cloud</p></div><button className="path-copy" onClick={() => void copyText(guide.workspace.displayPath, "path")} title={guide.workspace.displayPath}><Copy />{copied === "path" ? "已复制目录" : guide.workspace.displayPath}</button></header>
+            <ol>{guide.steps.map((step) => <li key={step.id} data-state={step.state}><span className="step-index">{step.state === "complete" ? <Check /> : guide.steps.findIndex((item) => item.id === step.id) + 1}</span><div><strong>{step.label}</strong><p>{step.detail}</p></div><em>{step.state === "complete" ? "已完成" : step.state === "current" ? "当前" : step.state === "available" ? "可稍后" : "后续"}</em></li>)}</ol>
+          </section>
 
           {connection?.account.state === "pending" && <section className="authorization"><div><span>设备授权码</span><strong>{connection.account.userCode}</strong><p>{connection.account.message}</p></div><a href={connection.account.verificationUrl} target="_blank" rel="noreferrer">前往授权 <ArrowUpRight /></a><button onClick={() => void command({ command: "poll_account_connection" })} disabled={Boolean(busy)}>我已批准</button></section>}
 
@@ -176,7 +214,7 @@ export function App() {
             <div className="ledger-row"><span>Official collection</span><strong>{connection?.platforms.filter((item) => item.state === "ready").length ?? 0} 个平台就绪</strong><em>Cloud 权威</em></div>
           </section>
 
-          {signedIn && !bound && <section className="binding">
+          {signedIn && !bound && <section className="binding" id="cloud-binding">
             <header><h2>绑定一个 Cloud 项目</h2><p>用于官方 API 采集、Evidence 与 Credit Receipt。</p></header>
             <label>组织<select value={selection.organizationId} onChange={(event) => { const organizationId = event.target.value; const org = account?.organizations.find((item) => item.id === organizationId); setSelection({ ...selection, organizationId, projectId: org?.projects[0]?.id ?? "" }); }}>{account?.organizations.map((org) => <option key={org.id} value={org.id}>{org.name} · {org.entitlement.planName}</option>)}</select></label>
             <label>项目<select value={selection.projectId} onChange={(event) => setSelection({ ...selection, projectId: event.target.value })}>{selectedOrganization?.projects.map((project) => <option key={project.id} value={project.id}>{project.name} · {project.brand.name}</option>)}</select></label>

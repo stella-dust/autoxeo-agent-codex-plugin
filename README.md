@@ -1,6 +1,6 @@
 # AutoXEO Agent for Codex
 
-公开的 Codex Plugin，用于运行可复测的中国 GEO 工作流。它包含六个
+公开的 Codex Plugin，用于运行可复测的中国 GEO 工作流。它包含七个
 Codex-native Skills、本地 stdio MCP、仅回环地址可见的 companion workbench、
 Brand Wiki 与 Artifact 协议，以及 AutoXEO Cloud 采集适配器。
 
@@ -12,7 +12,9 @@ Brand Wiki 与 Artifact 协议，以及 AutoXEO Cloud 采集适配器。
 Kimi 会显示真实的 `configuration_required` / `eligibility_required`
 状态，在官方 API 与账号完成验证前不会伪装为可用。
 
-## GitHub Release 本地安装
+## 三分钟开始
+
+### 1. 安装公开发行包
 
 从 GitHub Release 下载 `autoxeo-codex-plugin-marketplace-<version>.tar.gz` 与 `SHA256SUMS`，先校验再解压：
 
@@ -23,9 +25,33 @@ codex plugin marketplace add /absolute/path/to/autoxeo-codex-plugin-<version>
 codex plugin add autoxeo-agent@autoxeo
 ```
 
-安装或升级后新建 Codex task。发行包默认只连接
-`https://agent.autoxeo.com`。不要在 Plugin 环境、Skill 或项目报告中写入
-Provider Key；真实采集凭据只配置在 AutoXEO Cloud。
+安装或升级后新建一个 Codex task，然后只需说：
+
+> 开始使用 AutoXEO：检查工作区状态并打开本地工作台。
+
+### 2. 获得第一个本地成果
+
+Plugin 会自动建立 `~/Documents/AutoXEO_Workspace`，无需先创建项目目录。
+工作台会显示六步启动路线和唯一推荐下一步；首次使用会先引导当前 Codex
+会话把你授权的品牌资料整理成可追溯 Brand Wiki。这一步不需要登录、Credit
+或任何模型 Key。
+
+### 3. 在正式采集前连接账号
+
+当 Brand Wiki 就绪后，工作台会发起 AutoXEO 官网设备授权。使用你已有的
+`agent.autoxeo.com` 账号批准设备，再选择组织、Cloud 项目和本任务 Credit
+上限。Provider Key 只由管理员在 Cloud 后台配置，不进入 Plugin、Codex、
+本地工作区或报告。
+
+### 4. 完成真实 GEO 路线
+
+在 Codex 中继续使用对应 Skill：Brand Wiki → 可复测问题集 → 官方 API
+采集 → 基线分析 → 同题复测 → 交付物。工作台只保留三类伴随视图：
+Context 显示账号与启动路线，Collections 显示官方采集与 Evidence 真相，
+Artifacts 索引本地可审计产物。
+
+发行包默认只连接 `https://agent.autoxeo.com`。不要在 Plugin 环境、Skill
+或项目报告中写入 Provider Key；真实采集凭据只配置在 AutoXEO Cloud。
 
 ## 开发环境联调
 

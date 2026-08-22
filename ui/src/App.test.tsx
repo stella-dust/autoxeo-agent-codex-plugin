@@ -2,7 +2,7 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ProjectState } from "../../src/contracts.js";
+import type { ProjectState, SetupGuide } from "../../src/contracts.js";
 import { App } from "./App.js";
 
 const timestamp = "2026-08-22T02:30:00.000Z";
@@ -16,11 +16,25 @@ const state: ProjectState = {
 };
 const connection = { connected: true, evidenceStatus: "authoritative", message: "Cloud 已连接", account: { state: "signed_in", message: "已连接", deviceId: "device-1", accessExpiresAt: timestamp, refreshExpiresAt: timestamp }, runtime: { localDaemon: "online", cloudGateway: "online", queue: "available" }, platforms: [{ platform: "deepseek", label: "DeepSeek", state: "ready", search: "search enabled", detail: "官方 API 已验证" }] };
 const account = { account: { id: "user-1", email: "owner@example.cn", name: "Owner", status: "active" }, organizations: [{ id: "org-1", name: "AutoXEO", role: "owner", entitlement: { planName: "内测", subscriptionStatus: "active" }, credit: { available: 500, includedPerMonth: 500, usedThisPeriod: 5 }, projects: [{ id: "project-1", name: "中国 GEO 运营", brand: { id: "brand-1", name: "AutoXEO" } }] }], links: { account: "https://agent.autoxeo.com/account", support: "https://agent.autoxeo.com/support" } };
+const guide: SetupGuide = {
+  version: "0.6.0",
+  workspace: { state: "ready", displayPath: "~/Documents/AutoXEO_Workspace", createdAutomatically: true, authority: "local_workspace" },
+  progress: { completed: 5, total: 6 },
+  steps: [
+    { id: "plugin", label: "Codex Plugin", detail: "已加载", state: "complete" },
+    { id: "workspace", label: "本地工作区", detail: "已自动建立", state: "complete" },
+    { id: "brand_wiki", label: "Brand Wiki", detail: "4 个实体", state: "complete" },
+    { id: "account", label: "AutoXEO 账号", detail: "已连接", state: "complete" },
+    { id: "project", label: "Cloud 项目", detail: "已绑定", state: "complete" },
+    { id: "question_set", label: "可复测问题集", detail: "待冻结", state: "current" },
+  ],
+  nextAction: { kind: "copy_prompt", label: "复制问题集提示", description: "生成第一版问题集", prompt: "请生成问题集" },
+};
 
 beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn((input: RequestInfo | URL) => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
-    const body = url.endsWith("/api/v1/session") ? { csrfToken: "csrf" } : url.endsWith("/api/v1/state") ? state : url.endsWith("/api/v1/connection") ? connection : url.endsWith("/api/v1/account") ? account : {};
+    const body = url.endsWith("/api/v1/session") ? { csrfToken: "csrf" } : url.endsWith("/api/v1/state") ? state : url.endsWith("/api/v1/connection") ? connection : url.endsWith("/api/v1/get-started") ? guide : url.endsWith("/api/v1/account") ? account : {};
     return Promise.resolve(new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } }));
   }));
 });
@@ -29,6 +43,8 @@ afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 describe("Codex-native workbench", () => {
   it("states the model boundary and exposes official collections", async () => {
     render(<App />);
+    expect(await screen.findByRole("heading", { name: "启动路线" })).toBeVisible();
+    expect(screen.getAllByText("~/Documents/AutoXEO_Workspace")).toHaveLength(2);
     expect(await screen.findByText("不需要 DeepSeek Chat Key")).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: /Collections/ }));
     expect(await screen.findByRole("heading", { name: "Official collection" })).toBeVisible();

@@ -4,10 +4,11 @@ import { readFile } from "node:fs/promises";
 import type { AuthSession } from "./auth-session.js";
 import type { AccountOverview, CloudClient, ConnectionStatus } from "./cloud-client.js";
 import { artifactRegistrationSchema, cloudProjectSelectionSchema, collectionRequestSchema, questionSetSchema } from "./contracts.js";
-import type { ArtifactRegistration, CollectionRequest, ProjectState, QuestionSet } from "./contracts.js";
-import type { RuntimeConfig } from "./config.js";
+import type { ArtifactRegistration, CollectionRequest, ProjectState, QuestionSet, SetupGuide } from "./contracts.js";
+import { PLUGIN_VERSION, type RuntimeConfig } from "./config.js";
 import { resolveSafeProjectFile, sha256 } from "./security.js";
 import type { ProjectStore } from "./store.js";
+import { displayWorkspaceRoot } from "./workspace.js";
 
 export interface DomainEvent { id: string; type: "state.changed" | "collection.changed"; occurredAt: string; revision: number }
 
@@ -20,6 +21,75 @@ export class WorkbenchDomain {
   connectionStatus(): Promise<ConnectionStatus> { return this.cloud.connectionStatus(); }
   accountOverview(): Promise<AccountOverview> { return this.cloud.accountOverview(); }
   state(refreshArtifacts = false): Promise<ProjectState> { return this.store.snapshot({ refreshArtifacts }); }
+
+  async getStarted(): Promise<SetupGuide> {
+    const state = await this.store.snapshot({ refreshArtifacts: true });
+    const account = this.auth.status();
+    const signedIn = account.state === "signed_in";
+    const wikiReady = state.brand.wiki.status !== "missing";
+    const projectBound = Boolean(state.organization && state.project.cloudId);
+    const questionsReady = Boolean(state.collection.questionSetId);
+
+    const nextAction: SetupGuide["nextAction"] = !wikiReady
+      ? {
+          kind: "copy_prompt",
+          label: "复制 Brand Wiki 提示",
+          description: "先在当前 Codex 任务中整理真实品牌资料；这一步不需要登录 Cloud。",
+          prompt: "请使用 AutoXEO 的 Brand Wiki Skill，检查当前目录中的品牌资料，建立可追溯 Brand Wiki，并明确来源、冲突与禁止推断。",
+        }
+      : account.state === "pending"
+        ? {
+            kind: "poll_account",
+            label: "我已在官网批准",
+            description: `在官网输入设备码 ${account.userCode} 并批准后，返回这里完成连接。`,
+          }
+        : !signedIn
+          ? {
+            kind: "connect_account",
+            label: "连接 AutoXEO 账号",
+            description: "使用官网已有账号完成一次设备授权，以访问组织、项目、Credit 与官方采集。",
+            }
+          : !projectBound
+          ? {
+              kind: "bind_project",
+              label: "选择并绑定 Cloud 项目",
+              description: "选择当前品牌所属项目并设置本任务 Credit 上限；绑定本身不会扣费。",
+            }
+          : !questionsReady
+            ? {
+                kind: "copy_prompt",
+                label: "复制问题集提示",
+                description: "让 Codex 基于 Brand Wiki 生成、评审并冻结第一版可复测问题集。",
+                prompt: "请使用 AutoXEO 的 GEO 问题研究 Skill，基于当前 Brand Wiki 生成、去重、评审并冻结第一版可复测问题集。",
+              }
+            : {
+                kind: "open_collections",
+                label: "查看官方采集预检",
+                description: "问题集已经冻结，可以检查平台能力、Evidence 门与 Credit 预算。",
+              };
+
+    const steps: SetupGuide["steps"] = [
+      { id: "plugin", label: "Codex Plugin", detail: "已在当前 Codex 任务中加载", state: "complete" },
+      { id: "workspace", label: "本地工作区", detail: `${displayWorkspaceRoot(this.config.projectRoot)} · 已自动建立`, state: "complete" },
+      { id: "brand_wiki", label: "Brand Wiki", detail: wikiReady ? `${state.brand.wiki.entryCount} 个实体 · ${state.brand.wiki.evidenceCount} 项证据` : "可先离线建立，不依赖 Cloud", state: wikiReady ? "complete" : "current" },
+      { id: "account", label: "AutoXEO 账号", detail: signedIn ? "已通过官网设备授权连接" : account.state === "pending" ? `等待官网批准 · 设备码 ${account.userCode}` : "官方采集前需要；本地研究可稍后连接", state: signedIn ? "complete" : wikiReady ? "current" : "available", optionalForLocal: true },
+      { id: "project", label: "Cloud 项目", detail: projectBound ? `${state.organization?.name} · ${state.project.cloudName}` : "登录后选择组织、品牌项目和 Credit 上限", state: projectBound ? "complete" : signedIn ? "current" : "upcoming" },
+      { id: "question_set", label: "可复测问题集", detail: questionsReady ? state.collection.questionSetId ?? "已冻结" : "基于 Brand Wiki 生成、评审并冻结", state: questionsReady ? "complete" : wikiReady && projectBound ? "current" : "upcoming" },
+    ];
+
+    return {
+      version: PLUGIN_VERSION,
+      workspace: {
+        state: "ready",
+        displayPath: displayWorkspaceRoot(this.config.projectRoot),
+        createdAutomatically: true,
+        authority: "local_workspace",
+      },
+      progress: { completed: steps.filter((step) => step.state === "complete").length, total: steps.length },
+      steps,
+      nextAction,
+    };
+  }
 
   async bindCloudProject(raw: unknown): Promise<ProjectState> {
     const input = cloudProjectSelectionSchema.parse(raw);

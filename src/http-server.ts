@@ -152,6 +152,11 @@ export async function startWorkbenchServer(options: WorkbenchServerOptions): Pro
         return;
       }
 
+      if (request.method === "GET" && url.pathname === "/api/v1/get-started") {
+        json(response, 200, await options.domain.getStarted());
+        return;
+      }
+
       if (request.method === "GET" && url.pathname === "/api/v1/connection") {
         json(response, 200, await options.domain.connectionStatus());
         return;

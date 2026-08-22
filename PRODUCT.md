@@ -37,9 +37,12 @@ calculation and baseline/retest reporting only; no customer material ships.
 6. No independent dialogue-model client or `DEEPSEEK_CHAT_API_KEY` exists.
 7. Payment and unavailable Provider APIs remain honest configuration gates.
 
-## Explicit assumptions for AXI-008
+## Explicit assumptions for AXI-010
 
 The owner has fixed Codex as the only host, current-session inference as the only
 generative runtime, DeepSeek as the official Provider test slice,
 `agent.autoxeo.com` as the Cloud/Admin origin, and visual quality/consistency as
-release requirements. These assumptions are approved on 2026-08-22.
+release requirements. AXI-010 adds a guided first-use route whose first value is
+a real local workspace and Brand Wiki, while account connection remains clearly
+available for official collection. These assumptions are approved on
+2026-08-22.

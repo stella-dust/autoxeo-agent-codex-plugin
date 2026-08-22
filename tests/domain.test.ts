@@ -49,4 +49,27 @@ describe("WorkbenchDomain", () => {
     expect(job.provenance).toBe("official_api");
     expect((await domain.state()).collection.jobId).toBe("job-1");
   });
+
+  it("starts with local Brand Wiki value before requiring Cloud login", async () => {
+    const guide = await domain.getStarted();
+    expect(guide.version).toBe("0.6.0");
+    expect(guide.steps.map((step) => step.id)).toEqual([
+      "plugin",
+      "workspace",
+      "brand_wiki",
+      "account",
+      "project",
+      "question_set",
+    ]);
+    expect(guide.steps.find((step) => step.id === "brand_wiki")?.state).toBe(
+      "current",
+    );
+    expect(guide.steps.find((step) => step.id === "account")?.state).toBe(
+      "available",
+    );
+    expect(guide.nextAction).toMatchObject({
+      kind: "copy_prompt",
+      label: "复制 Brand Wiki 提示",
+    });
+  });
 });

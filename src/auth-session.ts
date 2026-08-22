@@ -3,7 +3,7 @@ import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { z } from "zod";
-import type { RuntimeConfig } from "./config.js";
+import { PLUGIN_VERSION, type RuntimeConfig } from "./config.js";
 
 const tokenPairSchema = z.object({
   accessToken: z.string().min(40),
@@ -102,7 +102,7 @@ export class AuthSession {
         label: `Codex Plugin · ${os.hostname()}`.slice(0, 120),
         platform: "darwin",
         arch: process.arch === "x64" ? "x64" : "arm64",
-        appVersion: "0.5.0",
+        appVersion: PLUGIN_VERSION,
         publicKey: installation.publicKey,
         codeChallenge,
       }),

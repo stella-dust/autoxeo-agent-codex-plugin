@@ -1,0 +1,4 @@
+interface:
+  display_name: "开始使用 AutoXEO"
+  short_description: "检查安装与工作区状态，并引导登录和首个 GEO 项目"
+  default_prompt: "使用 $start-autoxeo 检查我的工作区状态，并打开本地工作台带我开始第一个 GEO 项目。"

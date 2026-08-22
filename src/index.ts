@@ -5,7 +5,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { HttpCloudClient } from "./cloud-client.js";
 import { AuthSession } from "./auth-session.js";
-import { loadConfig } from "./config.js";
+import { loadConfig, PLUGIN_VERSION } from "./config.js";
 import { WorkbenchDomain } from "./domain.js";
 import { startWorkbenchServer, type WorkbenchHandle } from "./http-server.js";
 import { Logger } from "./logger.js";
@@ -21,7 +21,7 @@ const store = new ProjectStore(config.projectRoot);
 const domain = new WorkbenchDomain(config, store, new HttpCloudClient(config, auth), auth);
 await domain.initialize();
 
-const server = new McpServer({ name: "autoxeo-agent", version: "0.5.0" });
+const server = new McpServer({ name: "autoxeo-agent", version: PLUGIN_VERSION });
 let workbench: WorkbenchHandle | undefined;
 
 function asToolResult(value: unknown) {
@@ -77,6 +77,17 @@ function registerTool(
     }
   });
 }
+
+registerTool(
+  "get_started",
+  {
+    title: "开始使用 AutoXEO",
+    description: "读取 Plugin、本地工作区、账号、Cloud 项目、Brand Wiki 与问题集的首次使用进度，并返回唯一推荐下一步。不会登录、扣费或修改 Cloud。",
+    inputSchema: {},
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  },
+  () => domain.getStarted(),
+);
 
 registerTool(
   "connection_status",
@@ -165,11 +176,13 @@ registerTool(
   async () => {
     workbench ??= await startWorkbenchServer({ domain, logger });
     const state = await domain.state(false);
+    const guide = await domain.getStarted();
     return {
       url: workbench.url,
       project: state.project,
       mode: "codex_native",
       workspaceRoot: state.project.localRootName,
+      nextAction: guide.nextAction,
     };
   },
 );
