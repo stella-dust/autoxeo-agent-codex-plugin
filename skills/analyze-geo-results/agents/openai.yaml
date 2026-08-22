@@ -1,0 +1,4 @@
+interface:
+  display_name: "GEO 结果分析"
+  short_description: "基于可追溯平台证据解释指标并生成可复核的 GEO 分析报告"
+  default_prompt: "使用 $analyze-geo-results 分析当前数据集，并生成带 Evidence 的 Markdown 报告。"

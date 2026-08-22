@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "autoxeo-agent": {
+      "command": "node",
+      "args": ["./dist/server.mjs"],
+      "cwd": ".",
+      "env_vars": [
+        "AUTOXEO_WORKSPACE_ROOT",
+        "AUTOXEO_CLOUD_BASE_URL",
+        "PLUGIN_DATA",
+        "AUTOXEO_LOG_LEVEL"
+      ]
+    }
+  }
+}

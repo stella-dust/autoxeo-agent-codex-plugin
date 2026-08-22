@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-22T13:30:00+08:00",
+  "title": "Design System: AutoXEO Agent for Codex",
+  "extensions": {
+    "colorMeta": {
+      "signal-violet": {
+        "role": "primary",
+        "displayName": "Signal Violet",
+        "canonical": "#6b3fe7",
+        "tonalRamp": ["#211044", "#35186f", "#4b249e", "#6b3fe7", "#8b6cf0", "#ad99f6", "#d3c8fb", "#f1edff"]
+      },
+      "instrument-ink": {
+        "role": "neutral",
+        "displayName": "Instrument Ink",
+        "canonical": "#172022",
+        "tonalRamp": ["#111718", "#172022", "#273638", "#415255", "#66777a", "#96a3a5", "#cbd1d2", "#f2f4f4"]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Cool Paper",
+        "canonical": "#fbfcfc",
+        "tonalRamp": ["#182021", "#303a3c", "#536064", "#788589", "#a2abad", "#cbd1d2", "#e9eded", "#fbfcfc"]
+      }
+    },
+    "typographyMeta": {
+      "headline": {"displayName": "Page Headline", "purpose": "One leading task or account heading."},
+      "body": {"displayName": "Operational Body", "purpose": "Dense Chinese and English product copy."},
+      "label": {"displayName": "Instrument Label", "purpose": "Compact section and measurement labels."}
+    },
+    "shadows": [
+      {"name": "panel", "value": "0 10px 34px rgba(28, 43, 47, 0.09)", "purpose": "Transient mobile rail and inspector only."},
+      {"name": "action", "value": "0 5px 20px rgba(79, 48, 187, 0.07)", "purpose": "The next safe action surface."}
+    ],
+    "motion": [
+      {"name": "state", "value": "160ms ease", "purpose": "Hover and state transitions."},
+      {"name": "panel", "value": "220ms cubic-bezier(.2,.8,.2,1)", "purpose": "Mobile rail and inspector movement."}
+    ],
+    "breakpoints": [
+      {"name": "compact-shell", "value": "1120px"},
+      {"name": "mobile-shell", "value": "820px"},
+      {"name": "narrow", "value": "520px"}
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Action",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one safe action for the current task state.",
+      "html": "<button class=\"ds-primary\">确认并开始</button>",
+      "css": ".ds-primary{border:1px solid #5030bb;border-radius:7px;padding:9px 13px;background:#6b3fe7;color:#fff;font:700 12px/1.5 ui-sans-serif,sans-serif;transition:background 180ms ease,box-shadow 180ms ease}.ds-primary:hover{background:#5030bb}.ds-primary:focus-visible{outline:2px solid #6b3fe7;outline-offset:2px}"
+    },
+    {
+      "name": "Secondary Action",
+      "kind": "button",
+      "description": "A reversible supporting action.",
+      "html": "<button class=\"ds-secondary\">查看详情</button>",
+      "css": ".ds-secondary{border:1px solid #bdc9cc;border-radius:7px;padding:9px 13px;background:#fff;color:#39484b;font:700 12px/1.5 ui-sans-serif,sans-serif}.ds-secondary:hover{border-color:#849497;background:#f7f9f9}.ds-secondary:focus-visible{outline:2px solid #6b3fe7;outline-offset:2px}"
+    },
+    {
+      "name": "Status Label",
+      "kind": "chip",
+      "description": "Written state with a semantic tint.",
+      "html": "<span class=\"ds-status\">需要确认</span>",
+      "css": ".ds-status{display:inline-flex;align-items:center;border-radius:7px;padding:6px 9px;background:#f7ead5;color:#9a5a08;font:650 12px/1.4 ui-sans-serif,sans-serif}"
+    },
+    {
+      "name": "Next Action",
+      "kind": "card",
+      "description": "State, cost and next safe action bound together.",
+      "html": "<section class=\"ds-next\"><small>下一步</small><strong>确认问题集并开始采集</strong><span>预计 3 Credit</span></section>",
+      "css": ".ds-next{display:grid;gap:5px;border:1px solid #d8cdf8;border-radius:11px;padding:18px 19px;background:#f6f3ff;color:#172022;box-shadow:0 5px 20px rgba(79,48,187,.07);font-family:ui-sans-serif,sans-serif}.ds-next small{color:#665d7f;font-size:10px}.ds-next strong{font-size:17px}.ds-next span{color:#625878;font-size:11px}"
+    },
+    {
+      "name": "Active Navigation",
+      "kind": "nav",
+      "description": "The current workbench route.",
+      "html": "<nav class=\"ds-nav\">工作台</nav>",
+      "css": ".ds-nav{border-radius:7px;padding:8px;background:#fff;color:#172022;box-shadow:0 1px 2px rgba(32,48,52,.08);font:650 12px/1.4 ui-sans-serif,sans-serif}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Evidence Instrument",
+    "overview": "The workbench behaves like a precise operating instrument, not a marketing dashboard. Cool neutral surfaces make long sessions quiet; one signal violet marks the current path, safe action and focus. Exact state, Evidence and cost remain visually ahead of decoration.",
+    "keyCharacteristics": ["Compact but readable operational density.", "Hairline-separated lists before walls of cards.", "Semantic colors communicate state only.", "The next safe action is always visually explicit."],
+    "rules": [
+      {"name": "The One Signal Rule", "body": "Violet is reserved for action, selection, progress and focus; it is not ambient decoration.", "section": "colors"},
+      {"name": "The Truth Color Rule", "body": "Success, warning and danger appear only when the underlying state warrants them.", "section": "colors"},
+      {"name": "The Flat-at-Rest Rule", "body": "Persistent content does not float merely to look important.", "section": "elevation"}
+    ],
+    "dos": ["Do lead with verified state, next action and cost or impact.", "Do preserve keyboard focus, reduced motion and 44px coarse-pointer targets.", "Do keep complete loading, empty, offline, partial, success and error copy."],
+    "donts": ["Don't create a generic card wall or vanity-metric dashboard.", "Don't use gradients, glass effects or violet as decorative atmosphere.", "Don't imply provider availability, Evidence or billing outcomes that the backend did not prove."]
+  }
+}

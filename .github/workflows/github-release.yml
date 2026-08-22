@@ -1,0 +1,46 @@
+name: GitHub Plugin release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing immutable tag, for example v0.4.0
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22.12.0
+          cache: npm
+      - name: Verify immutable tag and version
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          test "$RELEASE_TAG" = "v$(node -p 'require("./package.json").version')"
+          test "$(git rev-parse "$RELEASE_TAG^{commit}")" = "$(git rev-parse HEAD)"
+      - run: npm ci
+      - run: npm run package:github-release
+      - name: Create prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          gh release create "$RELEASE_TAG" \
+            --verify-tag \
+            --prerelease \
+            --generate-notes \
+            --title "AutoXEO Agent for Codex $RELEASE_TAG" \
+            release/*

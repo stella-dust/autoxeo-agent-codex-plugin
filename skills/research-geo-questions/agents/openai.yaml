@@ -1,0 +1,4 @@
+interface:
+  display_name: "GEO 问题研究"
+  short_description: "为中国品牌生成、校验、评审并冻结可复测的 GEO 问题集"
+  default_prompt: "使用 $research-geo-questions 为当前品牌设计一套可复测的中国 GEO 问题。"

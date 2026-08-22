@@ -1,0 +1,10 @@
+node_modules/
+dist/
+release/
+coverage/
+*.tgz
+*.log
+.autoxeo/
+.env
+.env.*
+!.env.example
