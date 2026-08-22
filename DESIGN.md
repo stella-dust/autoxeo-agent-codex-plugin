@@ -25,6 +25,9 @@ colors:
   danger: "#ae2d36"
   danger-line: "#d8abb0"
   danger-paper: "#fff5f5"
+  current-paper: "#f3f7fd"
+  current-badge: "#e6efff"
+  success-line: "#9bc9bc"
 typography:
   family: "Avenir Next, SF Pro Text, PingFang SC, Microsoft YaHei, system-ui, sans-serif"
   headline: "clamp(32px, 4.3vw, 56px) / 1.06 / 700"
@@ -35,6 +38,7 @@ rounded:
   navigation: "11px"
   surface: "14px"
   emphasis: "16px"
+  status: "999px"
 ---
 
 # Design System: The Research Folio
@@ -54,6 +58,9 @@ into a card.
 - Account, Wiki and Cloud truths use separated ledger rows.
 - Official platform capabilities use a network ledger, not KPI tiles.
 - Artifact preview is the only persistent overlay and preserves file identity.
+- `Context` contains a compact activation ledger for Plugin, workspace, Brand
+  Wiki, account, Cloud project and frozen questions. It is not a fourth
+  navigation surface or a blocking tour.
 
 ## Rules
 
@@ -66,3 +73,5 @@ into a card.
 6. No six-stage workflow, vanity metrics, gradients, glass or card wall.
 7. Narrow layouts preserve all truth and actions in one column without
    horizontal scrolling; coarse-pointer targets reach 44px.
+8. First-use guidance always names the real Codex prompt or workbench action;
+   generic onboarding copy and hidden tool names are forbidden.

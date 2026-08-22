@@ -4,6 +4,7 @@ import path from "node:path";
 import { resolveWorkspaceRoot } from "./workspace.js";
 
 export const DEFAULT_CLOUD_BASE_URL = "https://agent.autoxeo.com";
+export const PLUGIN_VERSION = "0.6.0";
 
 const envSchema = z.object({
   AUTOXEO_WORKSPACE_ROOT: z.string().optional(),

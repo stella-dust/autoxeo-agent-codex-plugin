@@ -46,6 +46,33 @@ export const projectStateSchema = z.object({
 });
 export type ProjectState = z.infer<typeof projectStateSchema>;
 
+export type SetupStepState = "complete" | "current" | "available" | "upcoming";
+export type SetupActionKind = "copy_prompt" | "connect_account" | "poll_account" | "bind_project" | "open_collections";
+
+export interface SetupGuide {
+  version: string;
+  workspace: {
+    state: "ready";
+    displayPath: string;
+    createdAutomatically: boolean;
+    authority: "local_workspace";
+  };
+  progress: { completed: number; total: number };
+  steps: Array<{
+    id: "plugin" | "workspace" | "brand_wiki" | "account" | "project" | "question_set";
+    label: string;
+    detail: string;
+    state: SetupStepState;
+    optionalForLocal?: boolean;
+  }>;
+  nextAction: {
+    kind: SetupActionKind;
+    label: string;
+    description: string;
+    prompt?: string;
+  };
+}
+
 export const cloudProjectSelectionSchema = z.object({
   organizationId: z.string().min(1), projectId: z.string().min(1), taskBudget: z.number().int().nonnegative().max(100_000),
 });

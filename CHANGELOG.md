@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.6.0 - 2026-08-22
+
+- Add a read-only `get_started` contract and a dedicated onboarding Skill.
+- Automatically surface the exact local workspace path and a six-step
+  activation route in the companion workbench.
+- Make local Brand Wiki creation the first useful outcome before Cloud login.
+- Replace placeholder workbench identity with the official AutoXEO mark and
+  favicon.
+- Rewrite installation and first-run guidance around one recommended Codex
+  prompt and the real account/device authorization flow.
+
+## 0.5.0 - 2026-08-22
+
+- Rebuild the Plugin around the current Codex session for Wiki, questions,
+  analysis, retest and deliverables; remove the second dialogue-model key.
+- Add secure device authorization, Cloud project binding, official collection,
+  Evidence, Credit and local artifact workflows.
+- Expand the bundle to six production GEO Skills and the three-surface local
+  workbench.
+
 ## 0.4.0 - 2026-08-22
 
 - Establish the public Codex-only repository and Apache-2.0 release boundary.

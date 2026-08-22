@@ -1,6 +1,6 @@
 {
   "name": "autoxeo-agent",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "用当前 Codex 会话完成中国 GEO 问题、Brand Wiki、分析、复测与交付，并由 AutoXEO Cloud 执行官方平台 API 采集。",
   "author": { "name": "AutoXEO" },
   "skills": "./skills/",
@@ -12,7 +12,7 @@
     "category": "Productivity",
     "capabilities": ["Skills", "Local MCP", "Local WebUI", "Official API collection", "Project files"],
     "defaultPrompt": [
-      "整理当前品牌资料，建立可追溯的 Brand Wiki。",
+      "开始使用 AutoXEO：检查工作区状态并打开本地工作台。",
       "基于 Brand Wiki 生成并评审一组可复测的中国 GEO 问题。",
       "用官方平台采集数据完成基线或同题复测分析。"
     ],

@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { createTaskLayout, ensureWorkspace, resolveWorkspaceRoot, WORKSPACE_SCHEMA_VERSION } from "../src/workspace.js";
+import { createTaskLayout, displayWorkspaceRoot, ensureWorkspace, resolveWorkspaceRoot, WORKSPACE_SCHEMA_VERSION } from "../src/workspace.js";
 
 describe("AutoXEO Workspace", () => {
   const roots: string[] = [];
@@ -49,5 +49,11 @@ describe("AutoXEO Workspace", () => {
       schemaVersion: "autoxeo-workspace.v1",
       organizationId: "org_customer",
     });
+  });
+
+  it("uses a readable home-relative path in onboarding", () => {
+    expect(displayWorkspaceRoot(resolveWorkspaceRoot())).toBe(
+      "~/Documents/AutoXEO_Workspace",
+    );
   });
 });
