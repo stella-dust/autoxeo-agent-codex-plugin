@@ -1,0 +1,5 @@
+interface:
+  display_name: "GEO 基线分析"
+  short_description: "用确定性指标和 Evidence 解释首次采集结果"
+  default_prompt: "使用 $analyze-geo-baseline 分析当前官方采集数据并生成基线报告。"
+

@@ -102,7 +102,7 @@ export class AuthSession {
         label: `Codex Plugin · ${os.hostname()}`.slice(0, 120),
         platform: "darwin",
         arch: process.arch === "x64" ? "x64" : "arm64",
-        appVersion: "0.3.0",
+        appVersion: "0.5.0",
         publicKey: installation.publicKey,
         codeChallenge,
       }),

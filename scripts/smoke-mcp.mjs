@@ -12,18 +12,26 @@ const transport = new StdioClientTransport({
   env: { ...process.env, AUTOXEO_WORKSPACE_ROOT: path.join(projectRoot, "AutoXEO_Workspace"), AUTOXEO_LOG_LEVEL: "error" },
   stderr: "pipe",
 });
-const client = new Client({ name: "autoxeo-smoke", version: "0.3.0" });
+const client = new Client({ name: "autoxeo-smoke", version: "0.5.0" });
 
 try {
   await client.connect(transport);
   const tools = await client.listTools();
   const names = new Set(tools.tools.map((tool) => tool.name));
-  for (const required of ["connection_status", "open_local_workbench", "get_task_snapshot", "prepare_capture", "start_capture"]) {
+  for (const required of [
+    "connection_status",
+    "open_local_workbench",
+    "get_workspace_context",
+    "prepare_question_set",
+    "prepare_official_collection",
+    "start_official_collection",
+    "get_analysis_dataset",
+  ]) {
     if (!names.has(required)) throw new Error(`missing tool ${required}`);
   }
   const status = await client.callTool({ name: "connection_status", arguments: {} });
   if (status.isError) throw new Error("connection_status returned an error");
-  const snapshot = await client.callTool({ name: "get_task_snapshot", arguments: { refreshArtifacts: true } });
+  const snapshot = await client.callTool({ name: "get_workspace_context", arguments: { refreshArtifacts: true } });
   if (snapshot.isError) throw new Error("get_task_snapshot returned an error");
   process.stdout.write(`MCP smoke passed (${tools.tools.length} tools)\n`);
 } finally {

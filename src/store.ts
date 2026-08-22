@@ -1,153 +1,57 @@
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readFile, readdir, rename, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
-import {
-  PROTOCOL_VERSION,
-  projectStateSchema,
-  type Activity,
-  type Artifact,
-  type GeoNode,
-  type KnowledgeEntry,
-  type ProjectState,
-} from "./contracts.js";
+import { PROTOCOL_VERSION, projectStateSchema, type Activity, type Artifact, type ArtifactKind, type ProjectState } from "./contracts.js";
 import { safeDisplayRoot } from "./security.js";
 import { ensureWorkspace } from "./workspace.js";
 
-const stateRelativePath = path.join(".autoxeo", "state", "plugin-v1.json");
-const artifactExtensions = new Map([
-  [".md", "text/markdown"],
-  [".markdown", "text/markdown"],
-  [".json", "application/json"],
-  [".csv", "text/csv"],
-  [".html", "text/html"],
-] as const);
+const stateRelativePath = path.join(".autoxeo", "state", "plugin-v2.json");
+const artifactExtensions = new Map([[".md", "text/markdown"], [".markdown", "text/markdown"], [".json", "application/json"], [".csv", "text/csv"], [".html", "text/html"]] as const);
 type ArtifactExtension = ".md" | ".markdown" | ".json" | ".csv" | ".html";
 const skippedDirectories = new Set([".git", ".autoxeo", "node_modules", "dist", "coverage"]);
 
-function now(): string {
-  return new Date().toISOString();
-}
-
-function seedNodes(timestamp: string): GeoNode[] {
-  return [
-    {
-      kind: "question_research",
-      title: "问题研究",
-      status: "ready",
-      summary: "在本地模板中整理业务目标、受众和可复测问题。",
-      nextAction: "建立首个问题集",
-      artifactCount: 0,
-      updatedAt: timestamp,
-    },
-    {
-      kind: "platform_capture",
-      title: "平台采集",
-      status: "blocked",
-      summary: "等待问题版本冻结和 AutoXEO Cloud 能力预检。",
-      nextAction: "完成问题研究并登录 AutoXEO 账号",
-      artifactCount: 0,
-      updatedAt: timestamp,
-    },
-    {
-      kind: "metric_analysis",
-      title: "指标分析",
-      status: "blocked",
-      summary: "等待 official_api observed 回答批次。",
-      nextAction: "完成平台采集",
-      artifactCount: 0,
-      updatedAt: timestamp,
-    },
-    {
-      kind: "content_production",
-      title: "内容生产",
-      status: "blocked",
-      summary: "等待分析结论或人工 Brief。",
-      nextAction: "提供分析 Artifact",
-      artifactCount: 0,
-      updatedAt: timestamp,
-    },
-    {
-      kind: "distribution_task",
-      title: "投放任务",
-      status: "not_selected",
-      summary: "插件仅登记投放事实，不自动替用户发布。",
-      nextAction: "选择节点并提供已批准内容",
-      artifactCount: 0,
-      updatedAt: timestamp,
-    },
-    {
-      kind: "same_question_retest",
-      title: "同题复测",
-      status: "not_selected",
-      summary: "需冻结问题版本、基线批次和复测窗口。",
-      nextAction: "选择基线批次",
-      artifactCount: 0,
-      updatedAt: timestamp,
-    },
-  ];
-}
-
-function seedKnowledge(): KnowledgeEntry[] { return []; }
+function now(): string { return new Date().toISOString(); }
 
 function seedState(projectRoot: string): ProjectState {
   const timestamp = now();
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     protocolVersion: PROTOCOL_VERSION,
     revision: 1,
-    mode: "cloud",
-    project: { id: "workspace-local", name: "AutoXEO Workspace", rootName: safeDisplayRoot(projectRoot) },
-    organization: { id: "unbound", name: "尚未绑定 AutoXEO 组织" },
-    brand: {
-      id: "brand-unbound",
-      name: "尚未创建品牌知识库",
-      publicationId: null,
-      publicationStatus: "missing",
-      completeness: 0,
-    },
+    project: { localRootName: safeDisplayRoot(projectRoot), cloudId: null, cloudName: null },
+    organization: null,
+    brand: { id: null, name: null, wiki: { status: "missing", root: "brand-wiki", entryCount: 0, evidenceCount: 0 } },
     credit: { available: 0, reserved: 0, currency: "CREDIT", authoritative: false },
-    task: {
-      id: "task-unbound",
-      title: "开始第一个 GEO 项目",
-      status: "ready",
-      nextAction: "建立品牌知识库与问题集",
-      budget: 0,
-      estimatedCost: 0,
-    },
-    nodes: seedNodes(timestamp),
-    knowledge: seedKnowledge(),
+    task: { title: "首个 GEO 研究", budget: 0, estimatedCost: 0 },
+    collection: { status: "blocked", questionSetId: null, jobId: null, receiptId: null, provenance: "unavailable", nextAction: "先在 Codex 中建立 Brand Wiki 和问题集", updatedAt: timestamp },
     artifacts: [],
-    activity: [
-      {
-        id: randomUUID(),
-        type: "system",
-        title: "AutoXEO Workspace 已就绪",
-        detail: "本地产物可立即使用；Cloud、Credit 和正式采集需登录官网账号。",
-        status: "info",
-        occurredAt: timestamp,
-      },
-    ],
+    activity: [{ id: randomUUID(), type: "system", title: "Codex 工作区已就绪", detail: "推理与产物在当前 Codex 会话和本地工作区完成；官方采集需连接 AutoXEO Cloud。", status: "info", occurredAt: timestamp }],
     updatedAt: timestamp,
   };
+}
+
+function kindForPath(relativePath: string): ArtifactKind {
+  const normalized = relativePath.split(path.sep).join("/");
+  if (normalized.startsWith("brand-wiki/")) return "brand_wiki";
+  if (normalized.startsWith("questions/")) return "question_set";
+  if (normalized.startsWith("collections/")) return "collection_dataset";
+  if (normalized.startsWith("analysis/retests/")) return "retest_analysis";
+  if (normalized.startsWith("analysis/")) return "baseline_analysis";
+  if (normalized.startsWith("deliverables/") || normalized.startsWith("exports/")) return "deliverable";
+  return "other";
 }
 
 export class ProjectStore {
   private state: ProjectState | undefined;
   private readonly statePath: string;
 
-  constructor(
-    readonly projectRoot: string,
-    private readonly mode: ProjectState["mode"] = "cloud",
-  ) {
-    this.statePath = path.join(projectRoot, stateRelativePath);
-  }
+  constructor(readonly projectRoot: string) { this.statePath = path.join(projectRoot, stateRelativePath); }
 
   async load(): Promise<ProjectState> {
     if (this.state) return structuredClone(this.state);
     await ensureWorkspace(this.projectRoot);
     try {
-      const parsed: unknown = JSON.parse(await readFile(this.statePath, "utf8"));
-      this.state = projectStateSchema.parse(parsed);
+      this.state = projectStateSchema.parse(JSON.parse(await readFile(this.statePath, "utf8")));
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT" && !(error instanceof Error && error.name === "ZodError")) throw error;
       this.state = seedState(this.projectRoot);
@@ -160,9 +64,13 @@ export class ProjectStore {
     await this.load();
     if (options.refreshArtifacts) {
       const artifacts = await this.scanArtifacts();
+      const wikiArtifacts = artifacts.filter((item) => item.kind === "brand_wiki");
       if (JSON.stringify(artifacts) !== JSON.stringify(this.state?.artifacts)) {
         await this.update((draft) => {
           draft.artifacts = artifacts;
+          draft.brand.wiki.entryCount = wikiArtifacts.filter((item) => item.relativePath.includes("/entities/")).length;
+          draft.brand.wiki.evidenceCount = wikiArtifacts.filter((item) => item.relativePath.includes("/evidence/")).length;
+          draft.brand.wiki.status = wikiArtifacts.some((item) => item.relativePath === "brand-wiki/index.md" && item.bytes > 260) ? "draft" : "missing";
         });
       }
     }
@@ -181,16 +89,10 @@ export class ProjectStore {
   }
 
   async addActivity(activity: Omit<Activity, "id" | "occurredAt">): Promise<ProjectState> {
-    return this.update((draft) => {
-      draft.activity.unshift({ ...activity, id: randomUUID(), occurredAt: now() });
-      draft.activity = draft.activity.slice(0, 50);
-    });
+    return this.update((draft) => { draft.activity.unshift({ ...activity, id: randomUUID(), occurredAt: now() }); draft.activity = draft.activity.slice(0, 50); });
   }
 
-  private requireState(): ProjectState {
-    if (!this.state) throw new Error("STATE_NOT_LOADED");
-    return this.state;
-  }
+  private requireState(): ProjectState { if (!this.state) throw new Error("STATE_NOT_LOADED"); return this.state; }
 
   private async persist(): Promise<void> {
     if (!this.state) return;
@@ -203,16 +105,12 @@ export class ProjectStore {
   private async scanArtifacts(): Promise<Artifact[]> {
     const results: Artifact[] = [];
     const walk = async (directory: string, depth: number): Promise<void> => {
-      if (depth > 4 || results.length >= 200) return;
-      const entries = await readdir(directory, { withFileTypes: true });
-      for (const entry of entries) {
-        if (results.length >= 200) return;
+      if (depth > 5 || results.length >= 300) return;
+      for (const entry of await readdir(directory, { withFileTypes: true })) {
+        if (results.length >= 300) return;
         if (entry.name.startsWith(".") || skippedDirectories.has(entry.name)) continue;
         const absolute = path.join(directory, entry.name);
-        if (entry.isDirectory()) {
-          await walk(absolute, depth + 1);
-          continue;
-        }
+        if (entry.isDirectory()) { await walk(absolute, depth + 1); continue; }
         if (!entry.isFile()) continue;
         const extension = path.extname(entry.name).toLowerCase() as ArtifactExtension;
         const mediaType = artifactExtensions.get(extension);
@@ -221,16 +119,7 @@ export class ProjectStore {
         if (metadata.size > 2_000_000) continue;
         const relativePath = path.relative(this.projectRoot, absolute);
         const digest = createHash("sha256").update(await readFile(absolute)).digest("hex");
-        results.push({
-          id: digest.slice(0, 16),
-          name: entry.name,
-          relativePath,
-          mediaType,
-          bytes: metadata.size,
-          sha256: digest,
-          provenance: "local_artifact",
-          createdAt: metadata.mtime.toISOString(),
-        });
+        results.push({ id: digest.slice(0, 16), name: entry.name, relativePath, kind: kindForPath(relativePath), mediaType, bytes: metadata.size, sha256: digest, provenance: "local_artifact", createdAt: metadata.mtime.toISOString() });
       }
     };
     await walk(this.projectRoot, 0);

@@ -20,12 +20,12 @@ const commandSchema = z.discriminatedUnion("command", [
     taskBudget: z.number().int().nonnegative().max(100_000),
   }),
   z.object({
-    command: z.literal("prepare_capture"),
+    command: z.literal("prepare_official_collection"),
     questionSetId: z.string().default("questions-fixture-v1"),
     platforms: z.array(z.enum(["doubao", "qwen", "deepseek", "yuanbao", "kimi"])).default(["deepseek"]),
     maxCredit: z.number().positive().default(120),
   }),
-  z.object({ command: z.literal("start_capture"), ticketId: z.string().min(1), idempotencyKey: z.string().min(8) }),
+  z.object({ command: z.literal("start_official_collection"), ticketId: z.string().min(1), idempotencyKey: z.string().min(8) }),
 ]);
 
 interface WorkbenchServerOptions {
@@ -210,11 +210,11 @@ export async function startWorkbenchServer(options: WorkbenchServerOptions): Pro
           json(response, 200, await options.domain.bindCloudProject(command));
           return;
         }
-        if (command.command === "prepare_capture") {
+        if (command.command === "prepare_official_collection") {
           json(
             response,
             200,
-            await options.domain.prepareCapture({
+            await options.domain.prepareCollection({
               questionSetId: command.questionSetId,
               platforms: command.platforms,
               maxCredit: command.maxCredit,
@@ -222,7 +222,7 @@ export async function startWorkbenchServer(options: WorkbenchServerOptions): Pro
           );
           return;
         }
-        json(response, 200, await options.domain.startCapture(command.ticketId, command.idempotencyKey));
+        json(response, 200, await options.domain.startCollection(command.ticketId, command.idempotencyKey));
         return;
       }
 

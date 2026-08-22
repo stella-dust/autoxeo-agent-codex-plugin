@@ -1,30 +1,22 @@
 {
   "name": "autoxeo-agent",
-  "version": "0.4.0",
-  "description": "\u5728 Codex \u4e2d\u8fd0\u884c\u4e2d\u56fd GEO \u5de5\u4f5c\u6d41\uff0c\u5e76\u901a\u8fc7\u672c\u5730\u5de5\u4f5c\u53f0\u8fde\u63a5 AutoXEO Cloud\u3001\u77e5\u8bc6\u5e93\u548c\u9879\u76ee\u4ea7\u7269\u3002",
-  "author": {
-    "name": "AutoXEO"
-  },
+  "version": "0.5.0",
+  "description": "用当前 Codex 会话完成中国 GEO 问题、Brand Wiki、分析、复测与交付，并由 AutoXEO Cloud 执行官方平台 API 采集。",
+  "author": { "name": "AutoXEO" },
   "skills": "./skills/",
   "interface": {
-    "displayName": "AutoXEO Agent",
-    "shortDescription": "\u4e2d\u56fd GEO \u7814\u7a76\u3001\u5e73\u53f0\u91c7\u96c6\u3001\u5206\u6790\u4e0e\u672c\u5730\u8bc1\u636e\u5de5\u4f5c\u53f0",
-    "longDescription": "\u4f7f\u7528\u7528\u6237\u81ea\u5df1\u7684 Codex \u989d\u5ea6\u5b8c\u6210\u95ee\u9898\u7814\u7a76\u3001\u5206\u6790\u3001\u5185\u5bb9\u548c\u62a5\u544a\uff1b\u767b\u5f55\u7528\u6237\u5df2\u6709\u7684 AutoXEO \u5b98\u7f51\u8d26\u53f7\uff0c\u7531 AutoXEO Cloud \u6267\u884c\u5b98\u65b9\u5e73\u53f0\u91c7\u96c6\u3001\u8bc1\u636e\u4e0e Credit \u7ed3\u7b97\uff0c\u5e76\u4ee5\u672c\u5730 WebUI \u5c55\u793a\u77e5\u8bc6\u5e93\u3001\u516d\u8282\u70b9\u3001\u4e91\u670d\u52a1\u548c\u9879\u76ee\u6587\u4ef6\u3002\u9996\u53d1\u4ee5 DeepSeek \u4e3a\u6b63\u5f0f\u91c7\u96c6\u5207\u7247\uff0c\u5176\u4f59\u5e73\u53f0\u7b49\u5f85\u751f\u4ea7 API \u8d44\u683c\u3002",
+    "displayName": "AutoXEO for Codex",
+    "shortDescription": "Codex 原生 GEO 研究、Wiki、分析与官方 API 采集",
+    "longDescription": "问题生产、Brand Wiki、基线分析、同题复测和交付物由当前 Codex 会话通过六个专业 Skill 完成，不需要独立对话模型 Key。AutoXEO Cloud 只负责账号、项目、官方平台 API 采集、Evidence、Job 与 Credit Receipt；本地 companion workbench 只显示 Context、Collections 和 Artifacts。",
     "developerName": "AutoXEO",
     "category": "Productivity",
-    "capabilities": [
-      "Skills",
-      "Local MCP",
-      "Local WebUI",
-      "Cloud capture",
-      "Project files"
-    ],
+    "capabilities": ["Skills", "Local MCP", "Local WebUI", "Official API collection", "Project files"],
     "defaultPrompt": [
-      "\u6253\u5f00 AutoXEO \u672c\u5730\u5de5\u4f5c\u53f0\uff0c\u68c0\u67e5\u5f53\u524d GEO \u4efb\u52a1\u7684\u4e0b\u4e00\u6b65\u3002",
-      "\u57fa\u4e8e\u54c1\u724c\u77e5\u8bc6\u5e93\u751f\u6210\u4e00\u7ec4\u53ef\u590d\u6d4b\u7684\u4e2d\u56fd GEO \u95ee\u9898\u3002",
-      "\u9884\u68c0 DeepSeek \u6b63\u5f0f\u91c7\u96c6\uff0c\u5e76\u5728\u6263\u8d39\u524d\u8ba9\u6211\u786e\u8ba4 Credit \u9884\u7b97\u3002"
+      "整理当前品牌资料，建立可追溯的 Brand Wiki。",
+      "基于 Brand Wiki 生成并评审一组可复测的中国 GEO 问题。",
+      "用官方平台采集数据完成基线或同题复测分析。"
     ],
-    "brandColor": "#6B3FE7",
+    "brandColor": "#1859D1",
     "composerIcon": "./assets/icon.svg",
     "logo": "./assets/icon.svg"
   },

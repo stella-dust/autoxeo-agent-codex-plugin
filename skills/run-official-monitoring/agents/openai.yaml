@@ -1,0 +1,5 @@
+interface:
+  display_name: "官方平台监测"
+  short_description: "预检、确认并运行 Cloud 官方 API 采集"
+  default_prompt: "使用 $run-official-monitoring 为当前冻结问题集运行一次官方平台采集。"
+

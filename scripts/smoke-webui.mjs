@@ -12,7 +12,7 @@ const transport = new StdioClientTransport({
   env: { ...process.env, AUTOXEO_WORKSPACE_ROOT: path.join(projectRoot, "AutoXEO_Workspace"), AUTOXEO_LOG_LEVEL: "error" },
   stderr: "pipe",
 });
-const client = new Client({ name: "autoxeo-webui-smoke", version: "0.3.0" });
+const client = new Client({ name: "autoxeo-webui-smoke", version: "0.5.0" });
 
 try {
   await client.connect(transport);
@@ -37,8 +37,17 @@ try {
   if (!cookie) throw new Error("session cookie missing");
   const state = await fetch(new URL("/api/v1/state", url), { headers: { cookie } });
   const body = await state.json();
-  if (!state.ok || body.nodes?.length !== 6) throw new Error("state contract failed");
-  process.stdout.write(`WebUI smoke passed (${url.origin}, six nodes)\n`);
+  if (
+    !state.ok ||
+    body.schemaVersion !== 2 ||
+    body.protocolVersion !== "2026-08-22.plugin.v2" ||
+    !body.brand?.wiki ||
+    !Array.isArray(body.artifacts) ||
+    !body.collection
+  ) {
+    throw new Error("state contract failed");
+  }
+  process.stdout.write(`WebUI smoke passed (${url.origin}, Codex-native state v2)\n`);
 } finally {
   await client.close();
   await rm(projectRoot, { recursive: true, force: true });

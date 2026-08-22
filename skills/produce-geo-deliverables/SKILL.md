@@ -1,0 +1,33 @@
+---
+name: produce-geo-deliverables
+description: 将 Brand Wiki、问题集和 GEO 分析转化为分层报告、内容 Brief、渠道稿件、FAQ、实体页或复测行动包，并生成可追溯交付清单。用户要求报告、内容产出、管理层汇报、优化稿件或交付物时使用。
+---
+
+# GEO 交付物生产
+
+当前 Codex 会话负责写作。输入事实来自 Brand Wiki 和 Evidence；分析建议来自已验证报告。Cloud 不生成内容，脚本不调用模型。
+
+## 输入门
+
+1. 读取 `brand-wiki/`、冻结问题集、baseline/retest summary 和 action plan。
+2. 建立 claim table：每项事实、source ref、允许表达、禁止外推、有效期。没有来源的商业数字、客户成果和平台结论不得写入成稿。
+3. 明确受众和决策：管理层需要判断与优先级，运营层需要路线与指标，执行层需要具体 Brief、正文、校验与复测问题。
+
+## 产出
+
+按请求选择产物，不机械全做：
+
+- 管理摘要：结论、证据强度、风险、下一周期资源；
+- 运营报告：平台/问题/来源差距与 30/60/90 天计划；
+- 执行包：内容 Brief、官网实体页/FAQ、渠道适配稿、来源补强清单；
+- 复测包：冻结问题版本、变更清单、验证假设、窗口和成功/失败门。
+
+每项内容保存到 `deliverables/<cycle>/`，同时生成 `manifest.json`，包含输入 hash、source refs、audience、status、reviewer、createdAt 和 retest linkage。运行 `scripts/validate-manifest.mjs`，再登记最终产物 hash。
+
+## 规则
+
+- 渠道适配改变结构和语气，不改变事实。
+- “建议发布”不等于“已经发布”；外部发布必须由用户另行授权并提供回执。
+- 不把竞品差距改写成无法证明的优势，不把假设 ROI 写成真实回报。
+- 修改已有文件时保留版本或取得用户明确覆盖授权。
+

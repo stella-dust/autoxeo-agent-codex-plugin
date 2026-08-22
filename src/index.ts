@@ -21,7 +21,7 @@ const store = new ProjectStore(config.projectRoot);
 const domain = new WorkbenchDomain(config, store, new HttpCloudClient(config, auth), auth);
 await domain.initialize();
 
-const server = new McpServer({ name: "autoxeo-agent", version: "0.4.0" });
+const server = new McpServer({ name: "autoxeo-agent", version: "0.5.0" });
 let workbench: WorkbenchHandle | undefined;
 
 function asToolResult(value: unknown) {
@@ -168,17 +168,17 @@ registerTool(
     return {
       url: workbench.url,
       project: state.project,
-      mode: state.mode,
-      workspaceRoot: state.project.rootName,
+      mode: "codex_native",
+      workspaceRoot: state.project.localRootName,
     };
   },
 );
 
 registerTool(
-  "get_task_snapshot",
+  "get_workspace_context",
   {
-    title: "读取 GEO 任务快照",
-    description: "读取当前项目、知识库摘要、六节点、Credit、活动和本地产物索引。",
+    title: "读取 Codex GEO 工作区上下文",
+    description: "读取本地 Brand Wiki、Cloud 项目绑定、官方采集状态、Credit 和产物索引；不执行模型推理。",
     inputSchema: { refreshArtifacts: z.boolean().default(false) },
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
@@ -198,8 +198,12 @@ registerTool(
           text: z.string().min(5).max(240),
           intent: z.enum(["awareness", "consideration", "comparison", "decision", "validation"]),
           persona: z.string().min(1).max(80),
+          questionType: z.enum(["decision", "open", "recommendation", "negative", "comparison"]),
+          brandMention: z.enum(["required", "excluded", "natural"]),
+          evidenceTier: z.enum(["A", "B", "C"]),
         }),
-      ).min(1).max(100),
+      ).min(1).max(200),
+      methodVersion: z.literal("geo-question-method-2026-08"),
     },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
   },
@@ -218,10 +222,10 @@ registerTool(
 );
 
 registerTool(
-  "prepare_capture",
+  "prepare_official_collection",
   {
-    title: "预检平台采集",
-    description: "检查平台能力、预算和 Credit 估算并返回短期确认票据；本步骤不调用平台、不扣费。",
+    title: "预检官方平台 API 采集",
+    description: "检查官方 API 能力、Evidence 门、预算和 Credit 估算并返回短期确认票据；本步骤不调用平台、不扣费。",
     inputSchema: {
       questionSetId: z.string().min(1),
       platforms: z.array(z.enum(["doubao", "qwen", "deepseek", "yuanbao", "kimi"])).min(1).max(5),
@@ -229,36 +233,36 @@ registerTool(
     },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
   },
-  (input) => domain.prepareCapture(input),
+  (input) => domain.prepareCollection(input),
 );
 
 registerTool(
-  "start_capture",
+  "start_official_collection",
   {
-    title: "确认并开始平台采集",
-    description: "消费用户明确批准的确认票据和幂等键，创建 Cloud 采集 Job。该操作可能预留 Credit。",
+    title: "确认并开始官方平台 API 采集",
+    description: "消费用户明确批准的确认票据和幂等键，创建 Cloud 官方采集 Job。该操作可能预留 Credit。",
     inputSchema: { ticketId: z.string().min(1), idempotencyKey: z.string().min(8).max(160) },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
   },
-  (input) => domain.startCapture(input.ticketId as string, input.idempotencyKey as string),
+  (input) => domain.startCollection(input.ticketId as string, input.idempotencyKey as string),
 );
 
 registerTool(
-  "get_job",
+  "get_collection_job",
   {
     title: "读取采集 Job",
     description: "按 Job ID 查询权威状态、provenance 和 Credit 结算，不修改任务。",
     inputSchema: { jobId: z.string().min(1) },
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
   },
-  (input) => domain.getJob(input.jobId as string),
+  (input) => domain.getCollectionJob(input.jobId as string),
 );
 
 registerTool(
   "get_analysis_dataset",
   {
     title: "读取 GEO 分析数据集",
-    description: "读取最小化分析数据、方法版本和 provenance。模拟模式明确返回空 observed 指标。",
+    description: "从 Cloud 导出确定性分析数据、方法版本和 Evidence refs；Codex 负责解释和生成产物。",
     inputSchema: {},
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
   },
@@ -282,7 +286,7 @@ registerTool(
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
-logger.write("info", "mcp.started", { mode: config.mode, protocol: "2026-08-09.plugin.v1" });
+logger.write("info", "mcp.started", { mode: config.mode, protocol: "2026-08-22.plugin.v2" });
 
 async function shutdown(): Promise<void> {
   if (workbench) await workbench.close();

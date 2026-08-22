@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import type { AuthSession, AccountStatus } from "./auth-session.js";
 import type { RuntimeConfig } from "./config.js";
-import type { CaptureRequest, ConfirmationTicket, Platform, ProjectState, QuestionSet } from "./contracts.js";
+import type { CollectionRequest, ConfirmationTicket, Platform, ProjectState, QuestionSet } from "./contracts.js";
 import { PROTOCOL_VERSION, apiErrorSchema } from "./contracts.js";
 
 export interface PlatformCapacity {
@@ -83,14 +83,14 @@ export interface CloudProjectBinding {
   projectId: string;
 }
 
-export interface CapturePreflight {
+export interface CollectionPreflight {
   ticket: ConfirmationTicket;
   platforms: Array<{ platform: Platform; available: boolean; searchEnabled: boolean }>;
   estimatedCredit: number;
   evidenceStatus: "authoritative";
 }
 
-export interface CaptureJob {
+export interface CollectionJob {
   id: string;
   status: "queued" | "running" | "partial_failed" | "failed" | "cancelled" | "completed";
   receiptId: string;
@@ -105,9 +105,10 @@ export interface CloudClient {
   accountOverview(): Promise<AccountOverview>;
   prepareQuestionSet(input: QuestionSet, expectedRevision: number, binding: CloudProjectBinding): Promise<ConfirmationTicket>;
   commitQuestionSet(ticketId: string): Promise<{ questionSetId: string; receiptId: string }>;
-  prepareCapture(input: CaptureRequest, expectedRevision: number, binding: CloudProjectBinding): Promise<CapturePreflight>;
-  startCapture(ticketId: string, idempotencyKey: string): Promise<CaptureJob>;
-  getJob(jobId: string): Promise<CaptureJob>;
+  prepareCollection(input: CollectionRequest, expectedRevision: number, binding: CloudProjectBinding): Promise<CollectionPreflight>;
+  startCollection(ticketId: string, idempotencyKey: string): Promise<CollectionJob>;
+  getCollectionJob(jobId: string): Promise<CollectionJob>;
+  getAnalysisDataset(questionSetId: string): Promise<unknown>;
 }
 
 const pluginConnectionSchema = z.object({
@@ -241,14 +242,18 @@ export class HttpCloudClient implements CloudClient {
   commitQuestionSet(ticketId: string): Promise<{ questionSetId: string; receiptId: string }> {
     return this.request("/api/plugin/v1/question-sets/commit", { method: "POST", body: JSON.stringify({ ticketId, idempotencyKey: randomUUID() }) });
   }
-  prepareCapture(input: CaptureRequest, expectedRevision: number, binding: CloudProjectBinding): Promise<CapturePreflight> {
+  prepareCollection(input: CollectionRequest, expectedRevision: number, binding: CloudProjectBinding): Promise<CollectionPreflight> {
     return this.request("/api/plugin/v1/captures/prepare", { method: "POST", body: JSON.stringify({ input, expectedRevision, binding }) });
   }
-  startCapture(ticketId: string, idempotencyKey: string): Promise<CaptureJob> {
+  startCollection(ticketId: string, idempotencyKey: string): Promise<CollectionJob> {
     return this.request("/api/plugin/v1/captures", { method: "POST", body: JSON.stringify({ ticketId, idempotencyKey }) });
   }
-  getJob(jobId: string): Promise<CaptureJob> {
+  getCollectionJob(jobId: string): Promise<CollectionJob> {
     return this.request(`/api/plugin/v1/jobs/${encodeURIComponent(jobId)}`, { method: "GET" });
+  }
+
+  getAnalysisDataset(questionSetId: string): Promise<unknown> {
+    return this.request(`/api/plugin/v1/analysis-dataset?questionSetId=${encodeURIComponent(questionSetId)}`, { method: "GET" });
   }
 
   private async request<T>(pathname: string, init: RequestInit): Promise<T> {
