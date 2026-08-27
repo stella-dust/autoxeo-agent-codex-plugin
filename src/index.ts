@@ -9,16 +9,12 @@ import { loadConfig, PLUGIN_VERSION } from "./config.js";
 import { WorkbenchDomain } from "./domain.js";
 import { startWorkbenchServer, type WorkbenchHandle } from "./http-server.js";
 import { Logger } from "./logger.js";
-import { ProjectStore } from "./store.js";
-import { ensureWorkspace } from "./workspace.js";
 
 const config = loadConfig();
 const logger = new Logger(config.logLevel);
-await ensureWorkspace(config.projectRoot);
 const auth = new AuthSession(config);
 await auth.initialize();
-const store = new ProjectStore(config.projectRoot);
-const domain = new WorkbenchDomain(config, store, new HttpCloudClient(config, auth), auth);
+const domain = new WorkbenchDomain(config, new HttpCloudClient(config, auth), auth);
 await domain.initialize();
 
 const server = new McpServer({ name: "autoxeo-agent", version: PLUGIN_VERSION });
@@ -82,7 +78,7 @@ registerTool(
   "get_started",
   {
     title: "开始使用 AutoXEO",
-    description: "读取 Plugin、本地工作区、账号、Cloud 项目、Brand Wiki 与问题集的首次使用进度，并返回唯一推荐下一步。不会登录、扣费或修改 Cloud。",
+    description: "读取 Plugin、本地工作区、账号、Cloud 项目、品牌知识库与问题集的首次使用进度，并返回唯一推荐下一步。不会创建目录、登录、扣费或修改 Cloud。",
     inputSchema: {},
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
@@ -169,19 +165,17 @@ registerTool(
   "open_local_workbench",
   {
     title: "打开 AutoXEO 本地工作台",
-    description: "启动或复用只监听 127.0.0.1 的本地 WebUI，并返回带一次性启动凭据的地址。",
+    description: "启动或复用只监听 127.0.0.1 的本地 WebUI，并返回带一次性启动凭据的地址。打开工作台不会创建工作区；目录只能由用户在工作台中选择并确认创建。",
     inputSchema: {},
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
   async () => {
     workbench ??= await startWorkbenchServer({ domain, logger });
-    const state = await domain.state(false);
     const guide = await domain.getStarted();
     return {
       url: workbench.url,
-      project: state.project,
       mode: "codex_native",
-      workspaceRoot: state.project.localRootName,
+      workspace: guide.workspace,
       nextAction: guide.nextAction,
     };
   },

@@ -9,10 +9,10 @@ const serverPath = process.env.AUTOXEO_SERVER_PATH ?? path.resolve("dist/server.
 const transport = new StdioClientTransport({
   command: process.execPath,
   args: [serverPath],
-  env: { ...process.env, AUTOXEO_WORKSPACE_ROOT: path.join(projectRoot, "AutoXEO_Workspace"), AUTOXEO_LOG_LEVEL: "error" },
+  env: { ...process.env, AUTOXEO_WORKSPACE_ROOT: "", AUTOXEO_PROJECT_ROOT: "", PLUGIN_DATA: path.join(projectRoot, "plugin-data"), AUTOXEO_LOG_LEVEL: "error" },
   stderr: "pipe",
 });
-const client = new Client({ name: "autoxeo-webui-smoke", version: "0.5.0" });
+const client = new Client({ name: "autoxeo-webui-smoke", version: "0.7.0" });
 
 try {
   await client.connect(transport);
@@ -33,6 +33,7 @@ try {
     body: JSON.stringify({ token }),
   });
   if (!bootstrap.ok) throw new Error(`bootstrap failed ${bootstrap.status}`);
+  const session = await bootstrap.json();
   const cookie = bootstrap.headers.get("set-cookie")?.split(";")[0];
   if (!cookie) throw new Error("session cookie missing");
   const state = await fetch(new URL("/api/v1/state", url), { headers: { cookie } });
@@ -47,7 +48,17 @@ try {
   ) {
     throw new Error("state contract failed");
   }
-  process.stdout.write(`WebUI smoke passed (${url.origin}, Codex-native state v2)\n`);
+  const guide = await fetch(new URL("/api/v1/get-started", url), { headers: { cookie } }).then((response) => response.json());
+  if (guide.workspace?.state !== "not_configured") throw new Error("workbench must start without a workspace");
+  const created = await fetch(new URL("/api/v1/commands", url), {
+    method: "POST",
+    headers: { "content-type": "application/json", cookie, origin: url.origin, "x-autoxeo-csrf": session.csrfToken },
+    body: JSON.stringify({ command: "create_workspace", parentPath: projectRoot, confirmation: "create_autoxeo_workspace" }),
+  });
+  if (!created.ok) throw new Error(`explicit workspace creation failed ${created.status}: ${await created.text()}`);
+  const createdState = await fetch(new URL("/api/v1/state", url), { headers: { cookie } }).then((response) => response.json());
+  if (createdState.brand?.wiki?.root !== "品牌知识库") throw new Error("Chinese workspace contract failed");
+  process.stdout.write(`WebUI smoke passed (${url.origin}, explicit Chinese workspace)\n`);
 } finally {
   await client.close();
   await rm(projectRoot, { recursive: true, force: true });

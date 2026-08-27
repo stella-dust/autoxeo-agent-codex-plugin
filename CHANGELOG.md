@@ -1,10 +1,21 @@
 # Changelog
 
+## 0.7.0 - 2026-08-28
+
+- Stop creating `~/Documents/AutoXEO_Workspace` during Plugin/MCP startup.
+- Start the local workbench in an unconfigured, read-only state and require the
+  user to choose a parent folder and explicitly confirm creation.
+- Replace the visible workspace layout with Chinese directory and template
+  names while retaining explicit read compatibility for existing legacy workspaces.
+- Update all seven Skills, WebUI states, tests and public setup guidance to the
+  same user-authorized workspace contract.
+
 ## 0.6.0 - 2026-08-22
 
 - Add a read-only `get_started` contract and a dedicated onboarding Skill.
-- Automatically surface the exact local workspace path and a six-step
-  activation route in the companion workbench.
+- Surface the exact local workspace path and a six-step activation route in the
+  companion workbench. This behavior was superseded by the explicit selection
+  flow in 0.7.0.
 - Make local Brand Wiki creation the first useful outcome before Cloud login.
 - Replace placeholder workbench identity with the official AutoXEO mark and
   favicon.

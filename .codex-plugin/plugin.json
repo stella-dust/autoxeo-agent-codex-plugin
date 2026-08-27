@@ -1,13 +1,13 @@
 {
   "name": "autoxeo-agent",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "用当前 Codex 会话完成中国 GEO 问题、Brand Wiki、分析、复测与交付，并由 AutoXEO Cloud 执行官方平台 API 采集。",
   "author": { "name": "AutoXEO" },
   "skills": "./skills/",
   "interface": {
     "displayName": "AutoXEO for Codex",
     "shortDescription": "Codex 原生 GEO 研究、Wiki、分析与官方 API 采集",
-    "longDescription": "问题生产、Brand Wiki、基线分析、同题复测和交付物由当前 Codex 会话通过六个专业 Skill 完成，不需要独立对话模型 Key。AutoXEO Cloud 只负责账号、项目、官方平台 API 采集、Evidence、Job 与 Credit Receipt；本地 companion workbench 只显示 Context、Collections 和 Artifacts。",
+    "longDescription": "问题生产、品牌知识库、基线分析、同题复测和交付物由当前 Codex 会话通过七个专业 Skill 完成，不需要独立对话模型 Key。启用插件不会创建目录；用户在本地工作台选择位置并确认后，才创建中文规范的 AutoXEO_Workspace。AutoXEO Cloud 只负责账号、项目、官方平台 API 采集、Evidence、Job 与 Credit Receipt。",
     "developerName": "AutoXEO",
     "category": "Productivity",
     "capabilities": ["Skills", "Local MCP", "Local WebUI", "Official API collection", "Project files"],

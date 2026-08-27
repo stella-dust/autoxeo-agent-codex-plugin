@@ -9,6 +9,9 @@ import { constantTimeEqual, randomToken } from "./security.js";
 
 const bootstrapSchema = z.object({ token: z.string().min(32) });
 const commandSchema = z.discriminatedUnion("command", [
+  z.object({ command: z.literal("choose_workspace_parent") }),
+  z.object({ command: z.literal("create_workspace"), parentPath: z.string().min(1).max(4096), confirmation: z.literal("create_autoxeo_workspace") }),
+  z.object({ command: z.literal("connect_existing_workspace") }),
   z.object({ command: z.literal("refresh_artifacts") }),
   z.object({ command: z.literal("start_account_connection") }),
   z.object({ command: z.literal("poll_account_connection") }),
@@ -195,6 +198,18 @@ export async function startWorkbenchServer(options: WorkbenchServerOptions): Pro
         const csrf = request.headers["x-autoxeo-csrf"];
         if (typeof csrf !== "string" || !constantTimeEqual(csrf, csrfToken)) throw new Error("CSRF_REJECTED");
         const command = commandSchema.parse(await readJson(request));
+        if (command.command === "choose_workspace_parent") {
+          json(response, 200, await options.domain.chooseWorkspaceParent());
+          return;
+        }
+        if (command.command === "create_workspace") {
+          json(response, 200, await options.domain.createSelectedWorkspace(command.parentPath));
+          return;
+        }
+        if (command.command === "connect_existing_workspace") {
+          json(response, 200, await options.domain.chooseAndConnectExistingWorkspace());
+          return;
+        }
         if (command.command === "refresh_artifacts") {
           json(response, 200, await options.domain.state(true));
           return;
@@ -258,14 +273,25 @@ export async function startWorkbenchServer(options: WorkbenchServerOptions): Pro
     } catch (error) {
       const message = error instanceof Error ? error.message : "UNKNOWN_ERROR";
       const status = message.includes("SESSION") || message.includes("CSRF") ? 401 : message.includes("NOT_FOUND") ? 404 : 400;
+      const workspaceMessages: Record<string, string> = {
+        WORKSPACE_NOT_CONFIGURED: "请先在本地工作台中选择位置并创建工作区。",
+        WORKSPACE_PATH_MUST_BE_ABSOLUTE: "请输入绝对路径，或使用“在 Finder 中选择”。",
+        WORKSPACE_PARENT_NOT_A_DIRECTORY: "所选位置不是可用文件夹。",
+        WORKSPACE_ALREADY_EXISTS: "该位置已有内容。请选择其他位置，或使用“连接已有工作区”。",
+        WORKSPACE_DIRECTORY_NAME_REQUIRED: "请选择名称为 AutoXEO_Workspace 的已有工作区。",
+        WORKSPACE_MIGRATION_REQUIRED: "该工作区版本暂不受支持，未进行任何迁移。",
+        FOLDER_SELECTION_CANCELLED: "未选择文件夹；没有创建或修改任何目录。",
+        FOLDER_PICKER_TIMEOUT: "文件夹选择已超时；没有创建或修改任何目录。",
+      };
+      const errorCode = message.split(":")[0] ?? "UNKNOWN_ERROR";
       options.logger.write("warn", "webui.request_failed", {
         requestId,
         route: url.pathname,
         status,
-        errorCode: message.split(":")[0],
+        errorCode,
         latencyMs: Date.now() - startedAt,
       });
-      json(response, status, { code: message.split(":")[0], message: "本地工作台请求失败，请刷新或重新打开工作台。", requestId });
+      json(response, status, { code: errorCode, message: workspaceMessages[errorCode] ?? "本地工作台请求失败，请刷新或重新打开工作台。", requestId });
     }
   });
 

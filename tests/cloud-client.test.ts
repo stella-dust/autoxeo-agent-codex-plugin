@@ -5,7 +5,7 @@ import type { RuntimeConfig } from "../src/config.js";
 
 describe("HttpCloudClient", () => {
   it("fails closed while the AutoXEO account is signed out", async () => {
-    const config: RuntimeConfig = { projectRoot: "/tmp/autoxeo-test/AutoXEO_Workspace", pluginDataRoot: "/tmp/autoxeo-test/data", mode: "cloud", logLevel: "error" };
+    const config: RuntimeConfig = { pluginDataRoot: "/tmp/autoxeo-test/data", mode: "cloud", logLevel: "error" };
     const auth = new AuthSession(config);
     const client = new HttpCloudClient(config, auth);
     await expect(client.connectionStatus()).resolves.toMatchObject({

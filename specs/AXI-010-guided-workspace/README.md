@@ -1,10 +1,14 @@
 # AXI-010: Guided Codex workspace
 
-Status: `approved`
+Status: `superseded by AXI-011`
 Date: 2026-08-22
 Owner approval: the product owner requested a clear real-user path from Plugin
 installation through local workspace creation, account login, workbench launch
 and the first useful GEO workflow in the current development request.
+
+> 2026-08-28 correction: automatic workspace creation in this specification is
+> no longer valid. AXI-011 requires the user to select a location in the local
+> workbench and explicitly confirm creation of a Chinese-layout workspace.
 
 ## First value
 
@@ -17,9 +21,8 @@ and project binding visibly available for official collection.
 1. Install the signed public Plugin release and start a new Codex task.
 2. Ask to start AutoXEO. Codex calls `get_started` and then
    `open_local_workbench`.
-3. The Plugin creates `~/Documents/AutoXEO_Workspace` automatically unless an
-   explicit local root was configured, then reports the exact display path and
-   its authority.
+3. Superseded: see AXI-011 for the user-authorized location picker and explicit
+   create action.
 4. The local workbench shows one activation route: Plugin, workspace, Brand
    Wiki, account, Cloud project and frozen question set. Completed, current and
    optional states are explicit.
@@ -46,7 +49,7 @@ and project binding visibly available for official collection.
 - a first-time user can identify installation, workspace, login, binding and
   first-Skill steps without knowing MCP tool names;
 - installation and workbench entry use one recommended prompt;
-- workspace creation is automatic, idempotent and tested;
+- superseded by AXI-011: workspace creation is explicit, user-authorized and tested;
 - `get_started` has no write, billing or open-world side effect;
 - login and project binding retain existing secure device authorization and
   Cloud authority;
