@@ -4,7 +4,7 @@ import path from "node:path";
 import { resolveWorkspaceRoot } from "./workspace.js";
 
 export const DEFAULT_CLOUD_BASE_URL = "https://agent.autoxeo.com";
-export const PLUGIN_VERSION = "0.6.0";
+export const PLUGIN_VERSION = "0.7.0";
 
 const envSchema = z.object({
   AUTOXEO_WORKSPACE_ROOT: z.string().optional(),
@@ -15,7 +15,7 @@ const envSchema = z.object({
 });
 
 export interface RuntimeConfig {
-  projectRoot: string;
+  configuredProjectRoot?: string;
   cloudBaseUrl?: string;
   pluginDataRoot: string;
   mode: "cloud";
@@ -24,9 +24,9 @@ export interface RuntimeConfig {
 
 export function loadConfig(source: NodeJS.ProcessEnv = process.env): RuntimeConfig {
   const env = envSchema.parse(source);
-  const root = resolveWorkspaceRoot(env.AUTOXEO_WORKSPACE_ROOT ?? env.AUTOXEO_PROJECT_ROOT);
+  const configuredRoot = env.AUTOXEO_WORKSPACE_ROOT ?? env.AUTOXEO_PROJECT_ROOT;
   const config: RuntimeConfig = {
-    projectRoot: root,
+    ...(configuredRoot ? { configuredProjectRoot: resolveWorkspaceRoot(configuredRoot) } : {}),
     cloudBaseUrl: env.AUTOXEO_CLOUD_BASE_URL ?? DEFAULT_CLOUD_BASE_URL,
     pluginDataRoot: env.PLUGIN_DATA ?? path.join(os.homedir(), "Library", "Application Support", "AutoXEO", "CodexPlugin"),
     mode: "cloud",

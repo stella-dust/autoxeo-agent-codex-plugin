@@ -3,7 +3,7 @@ import { mkdir, readFile, readdir, rename, stat, writeFile } from "node:fs/promi
 import path from "node:path";
 import { PROTOCOL_VERSION, projectStateSchema, type Activity, type Artifact, type ArtifactKind, type ProjectState } from "./contracts.js";
 import { safeDisplayRoot } from "./security.js";
-import { ensureWorkspace } from "./workspace.js";
+import { readWorkspace } from "./workspace.js";
 
 const stateRelativePath = path.join(".autoxeo", "state", "plugin-v2.json");
 const artifactExtensions = new Map([[".md", "text/markdown"], [".markdown", "text/markdown"], [".json", "application/json"], [".csv", "text/csv"], [".html", "text/html"]] as const);
@@ -12,7 +12,7 @@ const skippedDirectories = new Set([".git", ".autoxeo", "node_modules", "dist", 
 
 function now(): string { return new Date().toISOString(); }
 
-function seedState(projectRoot: string): ProjectState {
+function seedState(projectRoot: string, wikiRoot: "品牌知识库" | "brand-wiki"): ProjectState {
   const timestamp = now();
   return {
     schemaVersion: 2,
@@ -20,41 +20,43 @@ function seedState(projectRoot: string): ProjectState {
     revision: 1,
     project: { localRootName: safeDisplayRoot(projectRoot), cloudId: null, cloudName: null },
     organization: null,
-    brand: { id: null, name: null, wiki: { status: "missing", root: "brand-wiki", entryCount: 0, evidenceCount: 0 } },
+    brand: { id: null, name: null, wiki: { status: "missing", root: wikiRoot, entryCount: 0, evidenceCount: 0 } },
     credit: { available: 0, reserved: 0, currency: "CREDIT", authoritative: false },
     task: { title: "首个 GEO 研究", budget: 0, estimatedCost: 0 },
     collection: { status: "blocked", questionSetId: null, jobId: null, receiptId: null, provenance: "unavailable", nextAction: "先在 Codex 中建立 Brand Wiki 和问题集", updatedAt: timestamp },
     artifacts: [],
-    activity: [{ id: randomUUID(), type: "system", title: "Codex 工作区已就绪", detail: "推理与产物在当前 Codex 会话和本地工作区完成；官方采集需连接 AutoXEO Cloud。", status: "info", occurredAt: timestamp }],
+    activity: [{ id: randomUUID(), type: "system", title: "本地工作区已就绪", detail: "该目录由用户在本地工作台中选择并确认；推理与产物由当前 Codex 会话完成。", status: "info", occurredAt: timestamp }],
     updatedAt: timestamp,
   };
 }
 
 function kindForPath(relativePath: string): ArtifactKind {
   const normalized = relativePath.split(path.sep).join("/");
-  if (normalized.startsWith("brand-wiki/")) return "brand_wiki";
-  if (normalized.startsWith("questions/")) return "question_set";
-  if (normalized.startsWith("collections/")) return "collection_dataset";
-  if (normalized.startsWith("analysis/retests/")) return "retest_analysis";
-  if (normalized.startsWith("analysis/")) return "baseline_analysis";
-  if (normalized.startsWith("deliverables/") || normalized.startsWith("exports/")) return "deliverable";
+  if (normalized.startsWith("品牌知识库/") || normalized.startsWith("brand-wiki/")) return "brand_wiki";
+  if (normalized.startsWith("问题库/") || normalized.startsWith("questions/")) return "question_set";
+  if (normalized.startsWith("采集数据/") || normalized.startsWith("collections/")) return "collection_dataset";
+  if (normalized.startsWith("分析/复测/") || normalized.startsWith("analysis/retests/")) return "retest_analysis";
+  if (normalized.startsWith("分析/") || normalized.startsWith("analysis/")) return "baseline_analysis";
+  if (normalized.startsWith("交付物/") || normalized.startsWith("导出/") || normalized.startsWith("deliverables/") || normalized.startsWith("exports/")) return "deliverable";
   return "other";
 }
 
 export class ProjectStore {
   private state: ProjectState | undefined;
   private readonly statePath: string;
+  private wikiRoot: "品牌知识库" | "brand-wiki" = "品牌知识库";
 
   constructor(readonly projectRoot: string) { this.statePath = path.join(projectRoot, stateRelativePath); }
 
   async load(): Promise<ProjectState> {
     if (this.state) return structuredClone(this.state);
-    await ensureWorkspace(this.projectRoot);
+    const workspace = await readWorkspace(this.projectRoot);
+    this.wikiRoot = workspace.layoutLanguage === "zh-CN" ? "品牌知识库" : "brand-wiki";
     try {
       this.state = projectStateSchema.parse(JSON.parse(await readFile(this.statePath, "utf8")));
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT" && !(error instanceof Error && error.name === "ZodError")) throw error;
-      this.state = seedState(this.projectRoot);
+      this.state = seedState(this.projectRoot, this.wikiRoot);
       await this.persist();
     }
     return structuredClone(this.state);
@@ -70,7 +72,8 @@ export class ProjectStore {
           draft.artifacts = artifacts;
           draft.brand.wiki.entryCount = wikiArtifacts.filter((item) => item.relativePath.includes("/entities/")).length;
           draft.brand.wiki.evidenceCount = wikiArtifacts.filter((item) => item.relativePath.includes("/evidence/")).length;
-          draft.brand.wiki.status = wikiArtifacts.some((item) => item.relativePath === "brand-wiki/index.md" && item.bytes > 260) ? "draft" : "missing";
+          const indexPath = draft.brand.wiki.root === "品牌知识库" ? "品牌知识库/索引.md" : "brand-wiki/index.md";
+          draft.brand.wiki.status = wikiArtifacts.some((item) => item.relativePath === indexPath && item.bytes > 260) ? "draft" : "missing";
         });
       }
     }

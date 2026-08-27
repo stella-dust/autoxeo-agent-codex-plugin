@@ -7,7 +7,7 @@ import type { AccountOverview, CloudClient, CollectionJob, CollectionPreflight, 
 import type { RuntimeConfig } from "../src/config.js";
 import type { CollectionRequest, ConfirmationTicket } from "../src/contracts.js";
 import { WorkbenchDomain } from "../src/domain.js";
-import { ProjectStore } from "../src/store.js";
+import { createWorkspace } from "../src/workspace.js";
 
 class CloudStub implements CloudClient {
   connectionStatus(): Promise<ConnectionStatus> { throw new Error("unused"); }
@@ -28,9 +28,9 @@ describe("WorkbenchDomain", () => {
   let container: string; let domain: WorkbenchDomain;
   beforeEach(async () => {
     container = await mkdtemp(path.join(tmpdir(), "autoxeo-domain-"));
-    const projectRoot = path.join(container, "AutoXEO_Workspace");
-    const config: RuntimeConfig = { projectRoot, pluginDataRoot: path.join(projectRoot, ".runtime"), cloudBaseUrl: "https://agent.autoxeo.com", mode: "cloud", logLevel: "error" };
-    domain = new WorkbenchDomain(config, new ProjectStore(projectRoot), new CloudStub(), new AuthSession(config));
+    const projectRoot = (await createWorkspace(container)).root;
+    const config: RuntimeConfig = { configuredProjectRoot: projectRoot, pluginDataRoot: path.join(container, ".runtime"), cloudBaseUrl: "https://agent.autoxeo.com", mode: "cloud", logLevel: "error" };
+    domain = new WorkbenchDomain(config, new CloudStub(), new AuthSession(config));
     await domain.initialize();
     await domain.bindCloudProject({ organizationId: "org-1", projectId: "project-1", taskBudget: 100 });
   });
@@ -42,7 +42,8 @@ describe("WorkbenchDomain", () => {
   });
 
   it("keeps official collection separate from Codex reasoning", async () => {
-    await domain.store.update((draft) => { draft.collection.questionSetId = "questions-v1"; draft.collection.status = "ready"; });
+    const preparedQuestions = await domain.prepareQuestionSet({ title: "测试", methodVersion: "geo-question-method-2026-08", questions: [{ id: "q1", text: "AutoXEO 如何做 GEO？", intent: "awareness", persona: "市场负责人", questionType: "open", brandMention: "excluded", evidenceTier: "A" }] }) as { ticket: ConfirmationTicket };
+    await domain.commitQuestionSet(preparedQuestions.ticket.id);
     const prepared = await domain.prepareCollection({ questionSetId: "questions-v1", platforms: ["deepseek"], maxCredit: 50 }) as CollectionPreflight;
     expect(prepared.evidenceStatus).toBe("authoritative");
     const job = await domain.startCollection(prepared.ticket.id, "collection-idempotency-1") as CollectionJob;
@@ -52,7 +53,7 @@ describe("WorkbenchDomain", () => {
 
   it("starts with local Brand Wiki value before requiring Cloud login", async () => {
     const guide = await domain.getStarted();
-    expect(guide.version).toBe("0.6.0");
+    expect(guide.version).toBe("0.7.0");
     expect(guide.steps.map((step) => step.id)).toEqual([
       "plugin",
       "workspace",
@@ -69,7 +70,23 @@ describe("WorkbenchDomain", () => {
     );
     expect(guide.nextAction).toMatchObject({
       kind: "copy_prompt",
-      label: "复制 Brand Wiki 提示",
+      label: "复制品牌知识库提示",
     });
+  });
+
+  it("starts unconfigured without creating a workspace", async () => {
+    const emptyRoot = await mkdtemp(path.join(tmpdir(), "autoxeo-domain-empty-"));
+    try {
+      const config: RuntimeConfig = { pluginDataRoot: path.join(emptyRoot, "plugin-data"), cloudBaseUrl: "https://agent.autoxeo.com", mode: "cloud", logLevel: "error" };
+      const fresh = new WorkbenchDomain(config, new CloudStub(), new AuthSession(config));
+      await fresh.initialize();
+      await expect(fresh.getStarted()).resolves.toMatchObject({
+        workspace: { state: "not_configured", createdAutomatically: false, layoutLanguage: null },
+        nextAction: { kind: "select_workspace" },
+      });
+      await expect(fresh.prepareQuestionSet({})).rejects.toThrow("WORKSPACE_NOT_CONFIGURED");
+    } finally {
+      await rm(emptyRoot, { recursive: true, force: true });
+    }
   });
 });

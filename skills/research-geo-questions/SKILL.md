@@ -9,13 +9,13 @@ description: 基于本地 Brand Wiki 与证据注册表生成、去重、评审�
 
 ## 工作流
 
-1. 调用 `get_workspace_context`，读取 `brand-wiki/index.md`、实体页与 `brand-wiki/evidence/registry.json`。Wiki 缺失时先使用 `manage-brand-wiki`。
+1. 调用 `get_workspace_context`，读取 `品牌知识库/索引.md`、实体页与 `品牌知识库/证据/登记册.json`。知识库缺失时先使用 `manage-brand-wiki`。
 2. 一批问题只服务一个业务关键词。记录目标受众、使用场景、竞品边界、地区、平台和复测目的。
 3. 按证据优先级约束事实：A 官方公开资料，C 用户授权的一手材料，B 可复核的公开行为观察。无法证明的事实不进入问题前提。
 4. 从官方术语、口语表达、服务机制、典型场景、常见误解、核心痛点和平台习惯七个维度展开候选问题。
 5. 生成结构化问题，每题包含稳定 `id`、`text`、`intent`、`persona`、`questionType`、`brandMention`、`evidenceTier`。目标结构为决策 45%、开放 30%、推荐 10%、负面 10%、比较 5%；允许小样本取整。
 6. 品牌提及规则必须显式：品牌诊断题 `required`，自然发现题 `excluded`，只有确有必要时使用 `natural`。不得把同义改写伪装成覆盖面。
-7. 写入 `questions/drafts/<slug>.json`，运行 `scripts/validate-questions.mjs`。同时生成 Markdown 评审稿、纯问题清单、证据映射和生成说明。
+7. 写入 `问题库/草稿/<slug>.json`，运行 `scripts/validate-questions.mjs`。同时生成 Markdown 评审稿、纯问题清单、证据映射和生成说明。
 8. 向用户展示数量、五类分布、品牌提及分布、代表性问题、证据缺口和冻结含义。
 9. 调用 `prepare_question_set`。只有用户看到摘要并明确批准后才调用 `commit_question_set`。以 `receiptId` 和 `questionSetId` 作为冻结证据。
 

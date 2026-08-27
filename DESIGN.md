@@ -61,6 +61,9 @@ into a card.
 - `Context` contains a compact activation ledger for Plugin, workspace, Brand
   Wiki, account, Cloud project and frozen questions. It is not a fourth
   navigation surface or a blocking tour.
+- Before a workspace exists, `Context` exposes one inline location picker. It
+  separates selecting a parent directory from the final create action, shows
+  the exact resulting path, and states that no directory has been written yet.
 
 ## Rules
 

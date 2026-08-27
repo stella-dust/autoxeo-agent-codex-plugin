@@ -36,6 +36,17 @@ calculation and baseline/retest reporting only; no customer material ships.
 5. Fixture output is test evidence only and never `observed` provider Evidence.
 6. No independent dialogue-model client or `DEEPSEEK_CHAT_API_KEY` exists.
 7. Payment and unavailable Provider APIs remain honest configuration gates.
+8. Plugin activation and local-service startup never create a workspace. The
+   user chooses the parent directory and explicitly confirms creation.
+9. New workspaces use Chinese names for every user-visible business directory;
+   `.autoxeo` remains the hidden machine-state boundary.
+
+## Explicit assumptions for AXI-011
+
+The owner corrected the first-use contract on 2026-08-28: no default workspace
+path is inferred, creation happens only after an explicit local-workbench
+confirmation, and new workspace layouts use Chinese directory names. Existing
+legacy workspaces remain readable only after the user explicitly selects them.
 
 ## Explicit assumptions for AXI-010
 

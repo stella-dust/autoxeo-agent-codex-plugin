@@ -38,7 +38,7 @@ export const projectStateSchema = z.object({
   organization: z.object({ id: z.string(), name: z.string() }).nullable(),
   brand: z.object({
     id: z.string().nullable(), name: z.string().nullable(),
-    wiki: z.object({ status: z.enum(["missing", "draft", "ready"]), root: z.literal("brand-wiki"), entryCount: z.number().int().nonnegative(), evidenceCount: z.number().int().nonnegative() }),
+    wiki: z.object({ status: z.enum(["missing", "draft", "ready"]), root: z.enum(["品牌知识库", "brand-wiki"]), entryCount: z.number().int().nonnegative(), evidenceCount: z.number().int().nonnegative() }),
   }),
   credit: z.object({ available: z.number().nonnegative(), reserved: z.number().nonnegative(), currency: z.literal("CREDIT"), authoritative: z.boolean() }),
   task: z.object({ title: z.string(), budget: z.number().nonnegative(), estimatedCost: z.number().nonnegative() }),
@@ -47,14 +47,15 @@ export const projectStateSchema = z.object({
 export type ProjectState = z.infer<typeof projectStateSchema>;
 
 export type SetupStepState = "complete" | "current" | "available" | "upcoming";
-export type SetupActionKind = "copy_prompt" | "connect_account" | "poll_account" | "bind_project" | "open_collections";
+export type SetupActionKind = "select_workspace" | "copy_prompt" | "connect_account" | "poll_account" | "bind_project" | "open_collections";
 
 export interface SetupGuide {
   version: string;
   workspace: {
-    state: "ready";
+    state: "not_configured" | "ready";
     displayPath: string;
     createdAutomatically: boolean;
+    layoutLanguage: "zh-CN" | "legacy-en" | null;
     authority: "local_workspace";
   };
   progress: { completed: number; total: number };

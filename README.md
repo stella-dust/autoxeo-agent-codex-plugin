@@ -29,21 +29,30 @@ codex plugin add autoxeo-agent@autoxeo
 
 > 开始使用 AutoXEO：检查工作区状态并打开本地工作台。
 
-### 2. 获得第一个本地成果
+### 2. 选择并创建本地工作区
 
-Plugin 会自动建立 `~/Documents/AutoXEO_Workspace`，无需先创建项目目录。
-工作台会显示六步启动路线和唯一推荐下一步；首次使用会先引导当前 Codex
-会话把你授权的品牌资料整理成可追溯 Brand Wiki。这一步不需要登录、Credit
-或任何模型 Key。
+启用 Plugin、检查状态和打开本地服务都不会创建目录。进入工作台后，点击
+“在 Finder 中选择”确定父目录，核对将创建的完整路径，再点击“创建工作区”。
+系统只会在这个明确动作之后创建 `<所选父目录>/AutoXEO_Workspace`。
 
-### 3. 在正式采集前连接账号
+新工作区使用中文业务目录：`品牌知识库/`、`问题库/`、`采集数据/`、
+`分析/`、`交付物/`、`记忆/`、`任务/`、`模板/` 和 `导出/`。`.autoxeo/`
+只保存隐藏的本机状态。已有旧版工作区可以通过“连接已有工作区”显式选择，
+插件不会在后台静默迁移或改名。
+
+### 3. 获得第一个本地成果
+
+工作区创建后，工作台会引导当前 Codex 会话把你授权的品牌资料整理成
+`品牌知识库/` 中的可追溯 Brand Wiki。这一步不需要登录、Credit 或任何模型 Key。
+
+### 4. 在正式采集前连接账号
 
 当 Brand Wiki 就绪后，工作台会发起 AutoXEO 官网设备授权。使用你已有的
 `agent.autoxeo.com` 账号批准设备，再选择组织、Cloud 项目和本任务 Credit
 上限。Provider Key 只由管理员在 Cloud 后台配置，不进入 Plugin、Codex、
 本地工作区或报告。
 
-### 4. 完成真实 GEO 路线
+### 5. 完成真实 GEO 路线
 
 在 Codex 中继续使用对应 Skill：Brand Wiki → 可复测问题集 → 官方 API
 采集 → 基线分析 → 同题复测 → 交付物。工作台只保留三类伴随视图：
@@ -60,7 +69,7 @@ Artifacts 索引本地可审计产物。
 
 ```bash
 export AUTOXEO_CLOUD_BASE_URL=http://127.0.0.1:3000
-# 可选；未设置时使用 ~/Documents/AutoXEO_Workspace
+# 仅用于连接已经由测试脚本显式创建的工作区；运行时不会自动创建该目录
 export AUTOXEO_WORKSPACE_ROOT=/absolute/path/to/AutoXEO_Workspace
 ```
 

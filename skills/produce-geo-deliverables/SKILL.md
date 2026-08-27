@@ -9,7 +9,7 @@ description: 将 Brand Wiki、问题集和 GEO 分析转化为分层报告、内
 
 ## 输入门
 
-1. 读取 `brand-wiki/`、冻结问题集、baseline/retest summary 和 action plan。
+1. 读取 `品牌知识库/`、冻结问题集、基线/复测摘要和行动计划。
 2. 建立 claim table：每项事实、source ref、允许表达、禁止外推、有效期。没有来源的商业数字、客户成果和平台结论不得写入成稿。
 3. 明确受众和决策：管理层需要判断与优先级，运营层需要路线与指标，执行层需要具体 Brief、正文、校验与复测问题。
 
@@ -22,7 +22,7 @@ description: 将 Brand Wiki、问题集和 GEO 分析转化为分层报告、内
 - 执行包：内容 Brief、官网实体页/FAQ、渠道适配稿、来源补强清单；
 - 复测包：冻结问题版本、变更清单、验证假设、窗口和成功/失败门。
 
-每项内容保存到 `deliverables/<cycle>/`，同时生成 `manifest.json`，包含输入 hash、source refs、audience、status、reviewer、createdAt 和 retest linkage。运行 `scripts/validate-manifest.mjs`，再登记最终产物 hash。
+每项内容保存到 `交付物/<周期>/`，同时生成 `清单.json`，包含输入 hash、source refs、audience、status、reviewer、createdAt 和 retest linkage。运行 `scripts/validate-manifest.mjs`，再登记最终产物 hash。
 
 ## 规则
 
@@ -30,4 +30,3 @@ description: 将 Brand Wiki、问题集和 GEO 分析转化为分层报告、内
 - “建议发布”不等于“已经发布”；外部发布必须由用户另行授权并提供回执。
 - 不把竞品差距改写成无法证明的优势，不把假设 ROI 写成真实回报。
 - 修改已有文件时保留版本或取得用户明确覆盖授权。
-

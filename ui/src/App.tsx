@@ -8,7 +8,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 */
 import {
   ArrowUpRight, BookOpen, Check, ChevronRight, CircleAlert, Cloud, Copy, FileText,
-  FolderOpen, KeyRound, LoaderCircle, LogOut, Menu, Play, RefreshCw,
+  FolderOpen, FolderPlus, KeyRound, LoaderCircle, LogOut, Menu, Play, RefreshCw,
   ShieldCheck, X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -81,6 +81,7 @@ export function App() {
   const [selection, setSelection] = useState({ organizationId: "", projectId: "", taskBudget: 100 });
   const [preview, setPreview] = useState<{ artifact: Artifact; content: string }>();
   const [copied, setCopied] = useState<"path" | "prompt">();
+  const [workspaceParent, setWorkspaceParent] = useState("");
 
   const load = useCallback(async () => {
     const [nextState, nextConnection, nextGuide] = await Promise.all([
@@ -144,6 +145,10 @@ export function App() {
 
   const runNextAction = async () => {
     if (!guide) return;
+    if (guide.nextAction.kind === "select_workspace") {
+      document.querySelector("#workspace-setup")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
     if (guide.nextAction.kind === "copy_prompt" && guide.nextAction.prompt) {
       await copyText(guide.nextAction.prompt, "prompt");
       return;
@@ -174,6 +179,15 @@ export function App() {
 
   const signedIn = connection?.account.state === "signed_in";
   const bound = Boolean(state.project.cloudId);
+  const workspaceReady = guide.workspace.state === "ready";
+  const candidateWorkspacePath = workspaceParent
+    ? `${workspaceParent.replace(/[\\/]+$/, "")}/AutoXEO_Workspace`
+    : "尚未选择保存位置";
+
+  const chooseWorkspaceParent = async () => {
+    const selected = await command<{ parentPath: string; workspacePath: string }>({ command: "choose_workspace_parent" });
+    if (selected) setWorkspaceParent(selected.parentPath);
+  };
 
   return (
     <div className="shell">
@@ -183,7 +197,7 @@ export function App() {
       </header>
 
       <aside className={`folio ${menuOpen ? "open" : ""}`}>
-        <div className="project-identity"><small>WORKSPACE</small><strong>{state.project.cloudName ?? "Local GEO Research"}</strong><span title={guide.workspace.displayPath}>{guide.workspace.displayPath}</span></div>
+        <div className="project-identity"><small>WORKSPACE</small><strong>{state.project.cloudName ?? (workspaceReady ? "Local GEO Research" : "等待选择位置")}</strong><span title={guide.workspace.displayPath}>{guide.workspace.displayPath}</span></div>
         <nav aria-label="工作台导航">
           {(Object.keys(viewCopy) as View[]).map((key) => <button key={key} className={view === key ? "active" : ""} onClick={() => { setView(key); setMenuOpen(false); }}><span>{viewCopy[key].label}</span><small>{viewCopy[key].description}</small><ChevronRight /></button>)}
         </nav>
@@ -197,11 +211,26 @@ export function App() {
         {error && <div className="error" role="alert"><CircleAlert />{error}<button onClick={() => setError(undefined)} aria-label="关闭"><X /></button></div>}
 
         {view === "context" && <>
-          <section className="stage-head"><div><h1>{guide.progress.completed < guide.progress.total ? "从一个真实工作区开始。" : "把推理留在 Codex，把采集交给 Cloud。"}</h1><p>本地目录由 Plugin 自动建立。Codex 负责 Wiki、问题、分析与交付；Cloud 只负责账号、官方采集、Evidence 和 Credit。</p></div><BookOpen aria-hidden="true" /></section>
-          <section className="next-ledger"><div><span>推荐下一步</span><h2>{guide.nextAction.label}</h2><p>{guide.nextAction.description}</p></div><button onClick={() => void runNextAction()} disabled={Boolean(busy)}>{guide.nextAction.kind === "copy_prompt" ? <Copy /> : guide.nextAction.kind === "connect_account" || guide.nextAction.kind === "poll_account" ? <KeyRound /> : guide.nextAction.kind === "bind_project" ? <Cloud /> : <Play />}{copied === "prompt" ? "已复制，回到 Codex 粘贴" : guide.nextAction.label}</button></section>
+          <section className="stage-head"><div><h1>{!workspaceReady ? "由你决定研究资料保存在哪里。" : guide.progress.completed < guide.progress.total ? "从一个真实工作区开始。" : "把推理留在 Codex，把采集交给 Cloud。"}</h1><p>启用 Plugin 和打开本地服务都不会创建目录。你确认位置后，Codex 负责知识库、问题、分析与交付；Cloud 只负责账号、官方采集、Evidence 和 Credit。</p></div><BookOpen aria-hidden="true" /></section>
+          <section className="next-ledger"><div><span>推荐下一步</span><h2>{guide.nextAction.label}</h2><p>{guide.nextAction.description}</p></div><button onClick={() => void runNextAction()} disabled={Boolean(busy)}>{guide.nextAction.kind === "select_workspace" ? <FolderPlus /> : guide.nextAction.kind === "copy_prompt" ? <Copy /> : guide.nextAction.kind === "connect_account" || guide.nextAction.kind === "poll_account" ? <KeyRound /> : guide.nextAction.kind === "bind_project" ? <Cloud /> : <Play />}{copied === "prompt" ? "已复制，回到 Codex 粘贴" : guide.nextAction.label}</button></section>
+
+          {!workspaceReady && <section className="workspace-setup" id="workspace-setup" aria-labelledby="workspace-setup-title">
+            <header><div><h2 id="workspace-setup-title">创建本地工作区</h2><p>先选择父目录。只有点击“创建工作区”后，才会写入中文目录结构。</p></div><FolderPlus aria-hidden="true" /></header>
+            <div className="workspace-picker">
+              <label htmlFor="workspace-parent">保存位置</label>
+              <input id="workspace-parent" value={workspaceParent} onChange={(event) => setWorkspaceParent(event.target.value)} placeholder="例如：/Users/你的名字/Documents" autoComplete="off" spellCheck={false} />
+              <button className="secondary" onClick={() => void chooseWorkspaceParent()} disabled={Boolean(busy)}><FolderOpen />在 Finder 中选择</button>
+            </div>
+            <div className="workspace-candidate"><span>将创建</span><strong title={candidateWorkspacePath}>{candidateWorkspacePath}</strong><em>业务目录使用中文；隐藏状态保存在 .autoxeo</em></div>
+            <div className="workspace-actions">
+              <button onClick={() => void command({ command: "create_workspace", parentPath: workspaceParent, confirmation: "create_autoxeo_workspace" })} disabled={!workspaceParent || Boolean(busy)}><FolderPlus />{busy === "create_workspace" ? "正在创建…" : "创建工作区"}</button>
+              <button className="secondary" onClick={() => void command({ command: "connect_existing_workspace" })} disabled={Boolean(busy)}>连接已有工作区</button>
+              <p>不会上传本地文件，不会登录账号，也不会产生 Credit。</p>
+            </div>
+          </section>}
 
           <section className="activation-ledger" aria-labelledby="activation-title">
-            <header><div><h2 id="activation-title">启动路线</h2><p>{guide.progress.completed}/{guide.progress.total} 已完成 · 本地研究不必等待 Cloud</p></div><button className="path-copy" onClick={() => void copyText(guide.workspace.displayPath, "path")} title={guide.workspace.displayPath}><Copy />{copied === "path" ? "已复制目录" : guide.workspace.displayPath}</button></header>
+            <header><div><h2 id="activation-title">启动路线</h2><p>{guide.progress.completed}/{guide.progress.total} 已完成 · 本地研究不必等待 Cloud</p></div>{workspaceReady ? <button className="path-copy" onClick={() => void copyText(guide.workspace.displayPath, "path")} title={guide.workspace.displayPath}><Copy />{copied === "path" ? "已复制目录" : guide.workspace.displayPath}</button> : <span className="path-pending">尚未写入任何工作区目录</span>}</header>
             <ol>{guide.steps.map((step) => <li key={step.id} data-state={step.state}><span className="step-index">{step.state === "complete" ? <Check /> : guide.steps.findIndex((item) => item.id === step.id) + 1}</span><div><strong>{step.label}</strong><p>{step.detail}</p></div><em>{step.state === "complete" ? "已完成" : step.state === "current" ? "当前" : step.state === "available" ? "可稍后" : "后续"}</em></li>)}</ol>
           </section>
 
@@ -214,7 +243,7 @@ export function App() {
             <div className="ledger-row"><span>Official collection</span><strong>{connection?.platforms.filter((item) => item.state === "ready").length ?? 0} 个平台就绪</strong><em>Cloud 权威</em></div>
           </section>
 
-          {signedIn && !bound && <section className="binding" id="cloud-binding">
+          {workspaceReady && signedIn && !bound && <section className="binding" id="cloud-binding">
             <header><h2>绑定一个 Cloud 项目</h2><p>用于官方 API 采集、Evidence 与 Credit Receipt。</p></header>
             <label>组织<select value={selection.organizationId} onChange={(event) => { const organizationId = event.target.value; const org = account?.organizations.find((item) => item.id === organizationId); setSelection({ ...selection, organizationId, projectId: org?.projects[0]?.id ?? "" }); }}>{account?.organizations.map((org) => <option key={org.id} value={org.id}>{org.name} · {org.entitlement.planName}</option>)}</select></label>
             <label>项目<select value={selection.projectId} onChange={(event) => setSelection({ ...selection, projectId: event.target.value })}>{selectedOrganization?.projects.map((project) => <option key={project.id} value={project.id}>{project.name} · {project.brand.name}</option>)}</select></label>
